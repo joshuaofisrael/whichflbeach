@@ -2,10 +2,13 @@
 """Which FL Beach static site builder. Run from the repo root.
 
   python3 _build/build.py            # preview: root paths, CNAME, noindex on every page
-  python3 _build/build.py --launch   # live domain: same paths and CNAME, indexable, CF beacon
+  python3 _build/build.py --launch   # live domain: same paths and CNAME, indexable, CF beacon, GA4
+  python3 _build/check.py --launch
+  python3 _build/legal_gate.py check
 
 The single launch flag is `--launch`. Until you pass it, every page stays noindex.
 Canonicals, sitemap and JSON-LD always use https://whichflbeach.com/.
+Set GA4_ID before launch. See LAUNCH-NOTES.md.
 """
 import os, sys, json, html, re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -19,6 +22,8 @@ PUBLISHED = "2026-11-16"          # first publication of this page set. Do not r
 PUBLISHED_H = "16 Nov 2026"
 INDEXNOW_KEY = "af525312177496563755bb04b53948e9"
 CF_BEACON_TOKEN = "eac63f2b5dbc4539a2d95249baab6472"
+# Public GA4 measurement ID. Owner pastes G-XXXXXXXXXX. Empty until then. Not a secret.
+GA4_ID = ""
 CONTACT = "joshuaofisrael@gmail.com"
 E = html.escape
 PAGES = []  # (path, lastmod) for the sitemap. 404 and other noindex utility pages stay out.
@@ -58,7 +63,63 @@ def clip(d, n=155):
 LOGO = '<svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect width="64" height="64" rx="14" fill="#0b3954"/><circle cx="44" cy="18" r="8" fill="#f0b429"/><path d="M8 40c6-8 12-8 18 0s12 8 18 0 12-8 18 0v16H8z" fill="#0c7c86"/><path d="M8 48c6-6 12-6 18 0s12 6 18 0 12-6 18 0v8H8z" fill="#8fd0c8"/></svg>'
 NAV = [("/", "Home"), ("/beaches/", "Beaches"), ("/regions/", "Regions"), ("/guides/best-shelling/", "Shelling"), ("/guides/how-to-pick-a-florida-beach/", "How to pick")]
 
-def page(path, title, desc, body, jsonld=None, crumbs=None, noindex=False, legal=False):
+def analytics_tags():
+    # Preview stays free of the beacon and of Google. Launch adds both.
+    # gtag.js is not requested until consent.js calls loadGA4 after Accept.
+    if not LAUNCH:
+        return "<!-- cf-beacon: added by the launch flag -->"
+    ga = """<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('consent', 'default', {
+  'ad_storage': 'denied',
+  'ad_user_data': 'denied',
+  'ad_personalization': 'denied',
+  'analytics_storage': 'denied',
+  'functionality_storage': 'denied',
+  'personalization_storage': 'denied',
+  'security_storage': 'granted',
+  'wait_for_update': 500
+});
+gtag('set', 'ads_data_redaction', true);
+gtag('set', 'url_passthrough', true);
+window.GA4_ID = %s;
+window.loadGA4 = function(){
+  if(!window.GA4_ID || window.__ga4Loaded) return;
+  window.__ga4Loaded = true;
+  var s = document.createElement('script');
+  s.async = true;
+  s.src = 'https://www.googletagmanager.com/gtag/js?id=' + window.GA4_ID;
+  document.head.appendChild(s);
+  gtag('js', new Date());
+  gtag('consent', 'update', {
+    'analytics_storage': 'granted',
+    'ad_storage': 'denied',
+    'ad_user_data': 'denied',
+    'ad_personalization': 'denied'
+  });
+  gtag('config', window.GA4_ID);
+};
+window.setGA4Consent = function(granted){
+  if(granted){ window.loadGA4(); return; }
+  if(window.__ga4Loaded){
+    gtag('consent', 'update', {
+      'analytics_storage': 'denied',
+      'ad_storage': 'denied',
+      'ad_user_data': 'denied',
+      'ad_personalization': 'denied'
+    });
+  }
+};
+</script>
+<script src="/assets/consent.js?v=1" defer></script>
+""" % json.dumps(GA4_ID)
+    beacon = ("<!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{\"token\": \"%s\"}'></script><!-- End Cloudflare Web Analytics -->" % CF_BEACON_TOKEN)
+    return ga + beacon
+
+def page(path, title, desc, body, jsonld=None, crumbs=None, noindex=False, legal=False, og_type="website"):
+    if len(title) >= 60:
+        raise SystemExit("title too long (%d): %s" % (len(title), title))
     desc = clip(desc)
     canon = url(path)
     # 404 and other hard noindex pages stay out of the sitemap even after launch.
@@ -85,21 +146,22 @@ def page(path, title, desc, body, jsonld=None, crumbs=None, noindex=False, legal
         for i, (p, n) in enumerate(crumbs):
             items.append('<li><a href="%s">%s</a></li>' % (p, E(n)) if i < len(crumbs) - 1 else '<li aria-current="page">%s</li>' % E(n))
         bc = '<nav class="crumbs" aria-label="Breadcrumb"><ol>%s</ol></nav>' % "".join(items)
-    beacon = ("<!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{\"token\": \"%s\"}'></script><!-- End Cloudflare Web Analytics -->" % CF_BEACON_TOKEN) if LAUNCH else "<!-- cf-beacon: added by the launch flag -->"
+    tags = analytics_tags()
     legal_line = '<p class="legal-line">© 2026 Joshua Israel Ventures LLC. All rights reserved. Which FL Beach is a trade name of Joshua Israel Ventures LLC, a Florida limited liability company.</p>' if legal else ""
+    cookie = ' | <a href="#cookie-settings" id="cookie-settings">Cookie settings</a>' if LAUNCH else ""
     return f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{E(title)}</title><meta name="description" content="{E(desc)}"><link rel="canonical" href="{canon}">
 <meta name="robots" content="{robots}">
-<meta property="og:type" content="website"><meta property="og:site_name" content="{BRAND}"><meta property="og:title" content="{E(title)}"><meta property="og:description" content="{E(desc)}"><meta property="og:url" content="{canon}"><meta property="og:image" content="{url('/og.png')}"><meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/assets/style.css?v=1">{ldh}
+<meta property="og:type" content="{E(og_type)}"><meta property="og:site_name" content="{BRAND}"><meta property="og:locale" content="en_US"><meta property="og:title" content="{E(title)}"><meta property="og:description" content="{E(desc)}"><meta property="og:url" content="{canon}"><meta property="og:image" content="{url('/og.png')}"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="{E(title)}"><meta name="twitter:description" content="{E(desc)}"><meta name="twitter:image" content="{url('/og.png')}">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/assets/style.css?v=2">{ldh}
 </head><body><a class="skip" href="#main">Skip to content</a>
 <header class="site"><div class="wrap"><a class="brand" href="/">{LOGO}<span>{BRAND}</span></a><nav class="main" aria-label="Main">{nav}</nav></div></header>
 <main id="main" class="wrap">{bc}{body}</main>
 <footer class="site"><div class="wrap"><p class="fbrand"><strong>{BRAND}</strong> helps you pick a Florida beach from facts published by county and city parks, Florida State Parks, the Florida Fish and Wildlife Conservation Commission, and the Florida Department of Health. We do not post live water conditions. Read the managing agency page before you go.</p>
-<p class="flinks"><a href="/about/">About</a> | <a href="/methodology/">Sources and methods</a> | <a href="/image-policy/">Image policy</a> | <a href="/terms/">Terms of use</a> | <a href="/privacy/">Privacy</a> | <a href="/disclaimer/">Disclaimer</a> | <a href="/ad-disclosure/">Advertising disclosure</a> | <a href="/copyright/">Copyright and DMCA</a> | <a href="/contact/">Contact</a></p>
+<p class="flinks"><a href="/about/">About</a> | <a href="/contact/">Contact</a> | <a href="/privacy/">Privacy</a> | <a href="/terms/">Terms of use</a> | <a href="/disclaimer/">Disclaimer</a> | <a href="/copyright/">Copyright and DMCA</a> | <a href="/ad-disclosure/">Advertising disclosure</a> | <a href="/image-policy/">Image policy</a> | <a href="/methodology/">Sources and methods</a>{cookie}</p>
 {legal_line}</div></footer>
-<script src="/assets/site.js?v=1" defer></script>{beacon}
+<script src="/assets/site.js?v=1" defer></script>{tags}
 </body></html>'''
 
 def link(pair):
@@ -180,7 +242,8 @@ def red_blurb(b):
     return ("<h2>Red tide and water quality</h2><p>%s We do not post this week's conditions. FWC updates a daily sample map and a status report, and it points readers to the Mote beach conditions reports. The Florida Department of Health posts bacteria results and advisories on its Healthy Beaches map. Read those before you swim, and read the longer background on our <a href=\"/guides/red-tide/\">red tide guide</a>.</p>" % E(coast))
 
 def related(b):
-    bits = ['<a href="/counties/%s/">%s beaches</a>' % (b["county"], E(b["county_name"])),
+    bits = ['<a href="/beaches/">All beaches</a>',
+            '<a href="/counties/%s/">%s beaches</a>' % (b["county"], E(b["county_name"])),
             '<a href="/regions/%s/">%s</a>' % (b["region"], E(REGIONS[b["region"]]["name"]))]
     for s in b["nearby"]:
         n = by_slug(s)
@@ -245,34 +308,48 @@ def beach_page(b):
         ld[2]["isAccessibleForFree"] = True
     crumbs = [("/", "Home"), ("/beaches/", "Beaches"), ("/regions/%s/" % b["region"], REGIONS[b["region"]]["name"]),
               ("/counties/%s/" % b["county"], b["county_name"]), (path, b["name"])]
-    write(path, page(path, title, desc, body, ld, crumbs))
+    write(path, page(path, title, desc, body, ld, crumbs, og_type="article"))
 
 def card(b):
     return '<li class="card"><h2><a href="%s">%s</a></h2><p>%s</p></li>' % (bpath(b), E(b["name"]), E(b["angle"]))
 
 def beaches_index():
-    body = '<h1>Florida beach guides</h1><p class="answer">%d beaches, each tied to a county, city, or Florida State Parks page. Filter them on the <a href="/">homepage picker</a>, or start with a region.</p><ul class="cards">%s</ul>' % (
-        len(BEACHES), "".join(card(b) for b in BEACHES))
+    faqs = [
+        ("How do I choose a beach from this list?", "Use the homepage picker to filter by region, dogs, lifeguards, a wheelchair or mat, shelling, or kids. Or open a region, then a county, then the beach page."),
+        ("Where do the facts on each beach come from?", "Each beach page cites a county, city, or Florida State Parks page. Live red tide and bacteria results stay on FWC and the Florida Department of Health."),
+    ]
+    body = '<h1>Florida beach guides</h1><p class="answer">%d beaches, each tied to a county, city, or Florida State Parks page. Filter them on the <a href="/">homepage picker</a>, or start with a <a href="/regions/">region</a>.</p><ul class="cards">%s</ul>%s' % (
+        len(BEACHES), "".join(card(b) for b in BEACHES), faq_html(faqs))
     write("/beaches/", page("/beaches/", "Florida Beach Guides | %s" % BRAND,
                             "Guides to Florida beaches with parking, shelling, dogs, lifeguards, restrooms and access, cited to the managing agency.",
-                            body, None, [("/", "Home"), ("/beaches/", "Beaches")]))
+                            body, [article_ld("Florida beach guides", "/beaches/"), faq_ld(faqs)],
+                            [("/", "Home"), ("/beaches/", "Beaches")], og_type="article"))
 
 def region_pages():
     cards = []
     for key, R in REGIONS.items():
         bs = [b for b in BEACHES if b["region"] == key]
-        body = '<article class="prose wide"><h1>%s beaches</h1>%s<p class="answer">%s</p><ul class="cards">%s</ul><p><a href="/regions/">All regions</a> · <a href="/guides/how-to-pick-a-florida-beach/">How to pick</a></p></article>' % (
-            E(R["name"]), byline(), E(R["intro"]), "".join(card(b) for b in bs))
+        counties = sorted({b["county"]: b["county_name"] for b in bs}.items(), key=lambda kv: kv[1])
+        county_html = "<h2>Counties</h2><ul class=\"cols\">" + "".join(
+            '<li><a href="/counties/%s/">%s</a></li>' % (k, E(n)) for k, n in counties) + "</ul>"
         path = "/regions/%s/" % key
-        faqs = [("How should I choose a beach in this region?", R["intro"] + " Open a beach page for the parking, dog, lifeguard and access facts, then confirm them on the agency link.")]
+        faqs = [("How should I choose a beach in this region?", R["intro"] + " Open a county, then a beach page, for the parking, dog, lifeguard and access facts, then confirm them on the agency link.")]
+        body = '<article class="prose wide"><h1>%s beaches</h1>%s<p class="answer">%s</p>%s<h2>Beaches</h2><ul class="cards">%s</ul><p><a href="/regions/">All regions</a> · <a href="/beaches/">All beaches</a> · <a href="/guides/how-to-pick-a-florida-beach/">How to pick</a></p>%s</article>' % (
+            E(R["name"]), byline(), E(R["intro"]), county_html, "".join(card(b) for b in bs), faq_html(faqs))
         ld = [article_ld(R["name"] + " beaches", path), faq_ld(faqs)]
-        write(path, page(path, "%s Beaches | %s" % (R["name"], BRAND), R["intro"], body + faq_html(faqs), ld,
-                         [("/", "Home"), ("/regions/", "Regions"), (path, R["name"])]))
+        write(path, page(path, "%s Beaches | %s" % (R["name"], BRAND), R["intro"], body, ld,
+                         [("/", "Home"), ("/regions/", "Regions"), (path, R["name"])], og_type="article"))
         cards.append('<li class="card"><h2><a href="%s">%s</a></h2><p>%d beaches. %s</p></li>' % (path, E(R["name"]), len(bs), E(R["blurb"])))
-    body = '<h1>Florida beaches by region</h1><p class="answer">Four coasts, one question: which beach fits the day you actually have.</p><ul class="cards">%s</ul>' % "".join(cards)
+    hub_faqs = [
+        ("Which Florida coast should I open?", "Open the Gulf Coast, the Atlantic Coast, the Panhandle, or the Florida Keys. Each region page lists its counties and beaches."),
+        ("Is there one best beach in Florida?", "No. Choose the constraint that would ruin the day, then open that beach page and the managing agency link."),
+    ]
+    body = '<h1>Florida beaches by region</h1><p class="answer">Four coasts, one question: which beach fits the day you actually have.</p><ul class="cards">%s</ul><p>Or use the <a href="/">homepage picker</a> and the <a href="/beaches/">full beach list</a>.</p>%s' % (
+        "".join(cards), faq_html(hub_faqs))
     write("/regions/", page("/regions/", "Florida Beaches by Region | %s" % BRAND,
                             "Gulf Coast, Atlantic Coast, Panhandle and Florida Keys beach guides, with county hubs inside each region.",
-                            body, None, [("/", "Home"), ("/regions/", "Regions")]))
+                            body, [article_ld("Florida beaches by region", "/regions/"), faq_ld(hub_faqs)],
+                            [("/", "Home"), ("/regions/", "Regions")], og_type="article"))
 
 def county_pages():
     for key, name in sorted(COUNTIES.items(), key=lambda kv: kv[1]):
@@ -281,18 +358,42 @@ def county_pages():
             continue
         region = bs[0]["region"]
         intro = "%s has %d beaches in this guide. Each page uses that county's park page or the Florida State Parks page for the park, plus FWC and the Florida Department of Health for shells, red tide and bacteria." % (name, len(bs))
-        body = '<article class="prose wide"><h1>%s beaches</h1>%s<p class="answer">%s</p><ul class="cards">%s</ul><p><a href="/regions/%s/">Back to the %s</a></p></article>' % (
-            E(name), byline(), E(intro), "".join(card(b) for b in bs), region, E(REGIONS[region]["name"]))
         path = "/counties/%s/" % key
         faqs = [("Where do the %s facts come from?" % name, "From the county or city park page, or the Florida State Parks experiences page, linked on each beach. Live red tide and bacteria results stay on FWC and the Florida Department of Health.")]
-        write(path, page(path, "%s Beaches | %s" % (name, BRAND), clip(intro), body + faq_html(faqs),
+        body = '<article class="prose wide"><h1>%s beaches</h1>%s<p class="answer">%s</p><ul class="cards">%s</ul>%s%s</article>' % (
+            E(name), byline(), E(intro), "".join(card(b) for b in bs), pick_links(bs, region), faq_html(faqs))
+        write(path, page(path, "%s Beaches | %s" % (name, BRAND), clip(intro), body,
                          [article_ld(name + " beaches", path), faq_ld(faqs)],
-                         [("/", "Home"), ("/counties/" + key + "/", name)]))
+                         [("/", "Home"), ("/regions/", "Regions"), ("/regions/%s/" % region, REGIONS[region]["name"]), (path, name)],
+                         og_type="article"))
+
+def pick_links(bs, region):
+    bits = [
+        '<a href="/regions/%s/">%s</a>' % (region, E(REGIONS[region]["name"])),
+        '<a href="/beaches/">All beaches</a>',
+        '<a href="/guides/how-to-pick-a-florida-beach/">How to pick</a>',
+        '<a href="/guides/red-tide/">Red tide</a>',
+    ]
+    if any(b["shell"] == "yes" for b in bs):
+        bits.append('<a href="/guides/best-shelling/">Beaches where shelling is described</a>')
+    if any(b["dogs"] in ("yes", "designated") for b in bs):
+        bits.append('<a href="/guides/best-for-dogs/">Beaches that allow dogs</a>')
+    if any(b["kids"] for b in bs):
+        bits.append('<a href="/guides/best-for-kids/">Beaches that suit kids</a>')
+    if any(b["chair"] == "yes" or b["mat"] == "yes" for b in bs):
+        bits.append('<a href="/guides/best-for-accessibility/">Beaches with a wheelchair or mat</a>')
+    if any(b["water"] == "gulf" or b.get("sunset") for b in bs):
+        bits.append('<a href="/guides/best-for-sunsets/">Sunset direction</a>')
+    return "<p>%s</p>" % " · ".join(bits)
 
 def guide(path, title, h1, desc, inner, faqs, sources):
+    more = ['<a href="/">Homepage picker</a>', '<a href="/beaches/">All beaches</a>', '<a href="/regions/">Regions</a>']
+    if path != "/guides/how-to-pick-a-florida-beach/":
+        more.append('<a href="/guides/how-to-pick-a-florida-beach/">How to pick</a>')
+    inner += "<p>%s</p>" % " · ".join(more)
     body = '<article class="prose"><h1>%s</h1>%s%s%s<section class="sources"><h2>Sources</h2>%s<p class="note">Retrieved %s.</p></section></article>' % (
         E(h1), byline(), inner, faq_html(faqs), src_list(sources), PUBLISHED_H)
-    write(path, page(path, title, desc, body, [article_ld(h1, path), faq_ld(faqs)], [("/", "Home"), (path, h1)]))
+    write(path, page(path, title, desc, body, [article_ld(h1, path), faq_ld(faqs)], [("/", "Home"), (path, h1)], og_type="article"))
 
 def guides():
     shell = [b for b in BEACHES if b["shell"] == "yes"]
@@ -317,7 +418,7 @@ def guides():
            ("Do you post today's red tide?", "No. FWC posts the current status and a daily sample map. We link those pages and explain how to read them.")],
           [FWC_FAQ, FDOH, FWC_SHELLS])
 
-    guide("/guides/red-tide/", "Florida Red Tide: History and Where to Check | %s" % BRAND, "Red tide history and where to check today",
+    guide("/guides/red-tide/", "Red Tide: History and Where to Check | %s" % BRAND, "Red tide history and where to check today",
           "Florida red tide background from FWC, plus the live status map, beach conditions reports, and the health department bacteria map.",
           '''<div class="answer"><p><strong>Check today, do not trust a saved page.</strong> Open the FWC current status page and the daily sample map. Then open the Florida Department of Health Healthy Beaches map for bacteria. This guide explains the background. It does not state this week's cell counts.</p></div>
 <h2>What FWC says it is</h2><p>FWC describes red tide as a higher than normal concentration of a microscopic alga. In Florida, the species behind most red tides is Karenia brevis. At high concentrations the water can turn red or brown, and it can also stay its normal color.</p>
@@ -384,6 +485,11 @@ def home():
     regions = "".join('<li class="card"><h3><a href="/regions/%s/">%s</a></h3><p>%s</p></li>' % (k, E(R["name"]), E(R["blurb"])) for k, R in REGIONS.items())
     counties = "".join('<li><a href="/counties/%s/">%s</a></li>' % (k, E(n)) for k, n in sorted(COUNTIES.items(), key=lambda kv: kv[1]) if any(b["county"] == k for b in BEACHES))
     sarasota = "".join('<li><a href="%s">%s</a></li>' % (bpath(b), E(b["name"])) for b in BEACHES if b["county"] == "sarasota")
+    faqs = [
+        ("Which Florida beach should I pick?", "There is no single best beach. Use the picker for the constraint that would ruin the day: region, dogs, lifeguards, a wheelchair or mat, shelling, or a kids playground or guarded swim. Then open the beach page and the agency link."),
+        ("Do you post today's red tide or bacteria results?", "No. FWC posts the current status and a daily sample map. The Florida Department of Health posts bacteria results. This site links those pages and does not freeze a cell count."),
+        ("Where do the parking, dog, and access facts come from?", "From the county or city park page, or the Florida State Parks page, linked on each beach. If a fee, an hour, or a fill time is not on that page, it is not on ours."),
+    ]
     body = f'''<section class="hero"><h1>Which Florida beach should you go to?</h1>
 <p class="answer">A per beach guide for people who need the practical answer: parking, shelling, red tide, wheelchairs and mats, dogs, lifeguards, restrooms, and who the beach suits. Facts come from the county or state park page. Live conditions stay on FWC and the Florida Department of Health.</p>
 <p class="btnrow"><a class="btn" href="#picker">Pick a beach</a> <a class="btn alt" href="/guides/how-to-pick-a-florida-beach/">How to pick</a></p></section>
@@ -414,14 +520,15 @@ def home():
 </ul>
 <h2>Counties</h2><ul class="cols">{counties}</ul>
 <h2>Siesta Key and Sarasota</h2><p>Sarasota County is covered beach by beach, including Siesta Key accesses that differ on dogs, parking, and lifeguards.</p><ul class="cols">{sarasota}</ul>
-<h2>How the facts are chosen</h2><p>We cite the managing agency and leave out fees, hours, and fill times the page does not state. <a href="/methodology/">Sources and methods</a>.</p>'''
+<h2>How the facts are chosen</h2><p>We cite the managing agency and leave out fees, hours, and fill times the page does not state. <a href="/methodology/">Sources and methods</a>.</p>
+{faq_html(faqs)}'''
     write("/", page("/", "Which Florida Beach? Parking, Shells, Dogs and Access",
                     "Pick a Florida beach by parking, shelling, red tide, wheelchairs, dogs, lifeguards and restrooms. Facts from parks, FWC and the health department.",
-                    body))
+                    body, [article_ld("Which Florida beach should you go to?", "/"), faq_ld(faqs)]))
 
 def simple(path, title, desc, h1, inner, crumb=None, noindex=False, legal=False):
     write(path, page(path, title, desc, '<article class="prose"><h1>%s</h1>%s</article>' % (E(h1), inner),
-                     None, [("/", "Home"), (path, crumb or h1)], noindex=noindex, legal=legal))
+                     article_ld(h1, path), [("/", "Home"), (path, crumb or h1)], noindex=noindex, legal=legal, og_type="article"))
 
 def about_legal():
     simple("/about/", "About %s" % BRAND, "What Which FL Beach is and how the beach guides are checked.", "About Which FL Beach", f'''
@@ -442,7 +549,7 @@ def about_legal():
     simple("/image-policy/", "Image Policy | %s" % BRAND, "How Which FL Beach handles graphics. The site does not use photographs of beaches.", "Image policy", f'''
 <p>Last updated {PUBLISHED_H}.</p>
 <h2>Graphics</h2><p>The logo and the social image are original graphics we drew for this site. They are not photographs of a beach, and they are not copies of a park map or logo.</p>
-<h2>Photos</h2><p>Beach pages do not use photos. We do not copy park photography.</p>
+<h2>Photos</h2><p>Beach pages do not use photos. We do not copy park photography. Any photograph that is added later will link to this page.</p>
 <h2>AI generated images</h2><p>If we add an AI generated illustration later, it will carry a visible credit that says AI generated image, it will not depict a real person, and it will not be presented as a photo of a real beach.</p>
 <h2>Names</h2><p>We do not display agency logos. Names identify places.</p>
 <p>If you believe a graphic uses your work, see the <a href="/copyright/">copyright policy</a> or <a href="/contact/">contact us</a>.</p>''', "Image policy")
@@ -464,10 +571,12 @@ def about_legal():
 <h2>Governing law</h2><p>These terms are governed by the laws of the State of Florida, without regard to conflict of law rules. Disputes will be resolved in the state or federal courts located in Florida, and you consent to their jurisdiction.</p>
 <h2>Changes</h2><p>We may update these terms. The date above is the latest version. Questions: <a href="/contact/">contact us</a>.</p>'''),
     "/privacy/": ("Privacy Policy", f'''<p>Last updated {D}. This policy explains how Which FL Beach (whichflbeach.com), a trade name of Joshua Israel Ventures LLC, a Florida limited liability company, handles information.</p>
-<h2>Analytics</h2><p>When the public site is launched, pages may include Cloudflare Web Analytics to count visits. That product does not use cookies and does not track you across sites. The preview build of this site does not include the analytics script.</p>
+<h2>Analytics</h2><p>The public site uses Cloudflare Web Analytics and Google Analytics 4.</p>
+<p>Cloudflare Web Analytics counts visits. It does not use cookies and does not track you across sites. The launch build includes that beacon on every page. The preview build does not include it.</p>
+<p>Google Analytics 4 measures page visits for this site. The launch build loads the Google tag (gtag) only after you accept the cookie banner. Until then, Google Consent Mode v2 defaults are denied for ad storage, ad user data, ad personalization, and analytics storage. If you accept, analytics storage is set to granted and the tag loads for our GA4 property. Ad storage stays denied. This site does not run ads. If you reject, the tag is not loaded. Use the Cookie settings link in the footer to change your choice. That choice is stored in local storage in your browser. The preview build does not include Google Analytics 4.</p>
 <h2>Contact</h2><p>If you email {CONTACT}, we use your message and your address to reply. We keep them only as long as we need for that reply and for a record of a correction.</p>
 <h2>Advertising</h2><p>The site shows no ads today. If we add ads later, for example through Google AdSense, vendors including Google may use cookies to serve ads based on prior visits. You would be able to opt out of personalized advertising at Google Ads Settings and at aboutads.info. Where the law requires it, we will ask for consent before advertising cookies are set. We will update this policy before any ads go live.</p>
-<h2>Cookies</h2><p>Which FL Beach itself sets no cookies. The site works if your browser blocks them.</p>
+<h2>Cookies</h2><p>Which FL Beach itself sets no cookies. Google Analytics 4 may set cookies only after you accept. Cloudflare Web Analytics does not use cookies. The site works if your browser blocks cookies.</p>
 <h2>Hosting</h2><p>The site is hosted on GitHub Pages, which may log IP addresses for security and operations.</p>
 <h2>Your rights</h2><p>You can ask us to access, correct or delete personal information we hold. Email <a href="mailto:{CONTACT}">{CONTACT}</a>. Residents of some states and countries may have additional rights, which we will honor.</p>
 <h2>Children</h2><p>The site is for a general audience and is not directed at children under 13. We do not knowingly collect personal information from children.</p>
@@ -488,7 +597,7 @@ def about_legal():
     }
     for p, (t, inner) in legal.items():
         body = '<article class="prose"><h1>%s</h1>%s<p class="legal-line">© 2026 Joshua Israel Ventures LLC. All rights reserved. Which FL Beach is a trade name of Joshua Israel Ventures LLC, a Florida limited liability company.</p></article>' % (E(t), inner)
-        write(p, page(p, "%s | %s" % (t, BRAND), "%s for Which FL Beach (whichflbeach.com)." % t, body, None, [("/", "Home"), (p, t)]))
+        write(p, page(p, "%s | %s" % (t, BRAND), "%s for Which FL Beach (whichflbeach.com)." % t, body, article_ld(t, p), [("/", "Home"), (p, t)], og_type="article"))
 
 def not_found():
     body = '<h1>Page not found</h1><p>That address is not a beach guide. Try the <a href="/beaches/">beach list</a> or the <a href="/">picker</a>.</p>'
@@ -574,6 +683,8 @@ def main():
     for b in BEACHES:
         beach_page(b)
     beaches_index(); region_pages(); county_pages(); guides(); home(); about_legal(); not_found(); extras()
+    if LAUNCH and not GA4_ID:
+        print("WARNING: GA4_ID is empty. check.py --launch fails until you set a G- measurement ID.")
     print(len(BEACHES), "beaches", len(PAGES), "sitemap urls", "LAUNCH" if LAUNCH else "PREVIEW")
 
 if __name__ == "__main__":
