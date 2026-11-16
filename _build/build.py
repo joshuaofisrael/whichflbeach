@@ -23,7 +23,7 @@ PUBLISHED_H = "16 Nov 2026"
 INDEXNOW_KEY = "af525312177496563755bb04b53948e9"
 CF_BEACON_TOKEN = "eac63f2b5dbc4539a2d95249baab6472"
 # Public GA4 measurement ID. Owner pastes G-XXXXXXXXXX. Empty until then. Not a secret.
-GA4_ID = ""
+GA4_ID = "G-F8FHL1H2HM"
 CONTACT = "joshuaofisrael@gmail.com"
 E = html.escape
 PAGES = []  # (path, lastmod) for the sitemap. 404 and other noindex utility pages stay out.
