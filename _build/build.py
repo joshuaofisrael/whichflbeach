@@ -117,14 +117,34 @@ window.setGA4Consent = function(granted){
     beacon = ("<!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{\"token\": \"%s\"}'></script><!-- End Cloudflare Web Analytics -->" % CF_BEACON_TOKEN)
     return ga + beacon
 
-def page(path, title, desc, body, jsonld=None, crumbs=None, noindex=False, legal=False, og_type="website"):
+MONTHS = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+def human_date(iso):
+    y, m, d = iso.split("-")
+    return "%d %s %s" % (int(d), MONTHS[int(m)], y)
+
+# Pages whose content changed on this run only. Everything else keeps its original
+# PUBLISHED lastmod untouched -- no manufactured freshness across the rest of the site.
+TODAY = "2026-11-18"
+NEW_HUB_PATHS = {"/counties/nassau/"}
+CHANGED_HUB_PATHS = {"/beaches/", "/counties/duval/", "/regions/atlantic/", "/regions/",
+                     "/about/", "/", "/guides/best-shelling/"}
+
+def hub_dates(path):
+    if path in NEW_HUB_PATHS:
+        return TODAY, TODAY
+    if path in CHANGED_HUB_PATHS:
+        return None, TODAY
+    return None, None
+
+def page(path, title, desc, body, jsonld=None, crumbs=None, noindex=False, legal=False, og_type="website", lastmod=None):
     if len(title) >= 60:
         raise SystemExit("title too long (%d): %s" % (len(title), title))
     desc = clip(desc)
     canon = url(path)
     # 404 and other hard noindex pages stay out of the sitemap even after launch.
     if not noindex:
-        PAGES.append((path, PUBLISHED))
+        PAGES.append((path, lastmod or PUBLISHED))
     robots = "noindex, follow" if (noindex or not LAUNCH) else "index, follow, max-image-preview:large"
     ld = []
     if path == "/":
@@ -170,12 +190,12 @@ def link(pair):
 def src_list(pairs):
     return "<ul>" + "".join("<li>%s</li>" % link(p) for p in pairs) + "</ul>"
 
-def byline():
-    return '<p class="byline">By %s · Last verified %s</p>' % (BRAND, PUBLISHED_H)
+def byline(date_h=None):
+    return '<p class="byline">By %s · Last verified %s</p>' % (BRAND, date_h or PUBLISHED_H)
 
-def article_ld(headline, path, about=None):
+def article_ld(headline, path, about=None, published=None, modified=None):
     data = {"@context": "https://schema.org", "@type": "Article", "headline": headline,
-            "datePublished": PUBLISHED, "dateModified": PUBLISHED,
+            "datePublished": published or PUBLISHED, "dateModified": modified or published or PUBLISHED,
             "author": {"@type": "Organization", "name": BRAND, "url": BASE},
             "publisher": {"@type": "Organization", "name": BRAND, "url": BASE, "logo": {"@type": "ImageObject", "url": url("/logo.png")}},
             "image": url("/og.png"), "mainEntityOfPage": url(path)}
@@ -277,7 +297,13 @@ def beach_page(b):
     desc = b["angle"]
     faqs = beach_faqs(b)
     paras = "".join("<p>%s</p>" % E(p) for p in [b["angle"]] + b.get("extra", []))
-    body = f'''<article class="prose wide"><h1>{E(b["name"])}</h1>{byline()}
+    # Most beach records share the site-wide PUBLISHED/PUBLISHED_H fact-check date.
+    # A record only sets "published" when it was fact-checked on a later date; "modified"
+    # covers a later edit (e.g. a new cross-link) without claiming the facts were rechecked.
+    pub = b.get("published", PUBLISHED)
+    mod = b.get("modified", pub)
+    verified_h = human_date(pub) if b.get("published") else PUBLISHED_H
+    body = f'''<article class="prose wide"><h1>{E(b["name"])}</h1>{byline(verified_h)}
 <p class="sub">{E(b["place"])} · {E(b["county_name"])} · {E(b["manager"])}</p>
 {tags(b)}
 <div class="answer"><p><strong>Quick read.</strong> {E(b["who"])}</p></div>
@@ -292,7 +318,7 @@ def beach_page(b):
 {faq_html(faqs)}
 <section class="sources" aria-labelledby="src-h"><h2 id="src-h">Sources</h2>
 {src_list(b["sources"] + [FWC_FAQ, FWC_STATUS, FWC_SHELLS, FDOH])}
-<p class="note">Retrieved {PUBLISHED_H}. Which FL Beach is not the park manager and is not affiliated with the agencies linked above. See <a href="/methodology/">how we check a page</a>.</p></section>
+<p class="note">Retrieved {verified_h}. Which FL Beach is not the park manager and is not affiliated with the agencies linked above. See <a href="/methodology/">how we check a page</a>.</p></section>
 {related(b)}</article>'''
     about = {"@type": ["Beach", "TouristAttraction"], "name": b["name"], "url": url(path),
              "description": clip(b["angle"]), "publicAccess": True,
@@ -300,7 +326,7 @@ def beach_page(b):
              "containedInPlace": {"@type": "AdministrativeArea", "name": b["county_name"]}}
     if b.get("free_access"):
         about["isAccessibleForFree"] = True
-    ld = [article_ld(b["name"], path, about), faq_ld(faqs),
+    ld = [article_ld(b["name"], path, about, published=pub, modified=mod), faq_ld(faqs),
           {"@context": "https://schema.org", "@type": ["Beach", "TouristAttraction"], "name": b["name"],
            "url": url(path), "description": clip(b["angle"]), "publicAccess": True,
            "address": about["address"], "containedInPlace": about["containedInPlace"]}]
@@ -308,7 +334,7 @@ def beach_page(b):
         ld[2]["isAccessibleForFree"] = True
     crumbs = [("/", "Home"), ("/beaches/", "Beaches"), ("/regions/%s/" % b["region"], REGIONS[b["region"]]["name"]),
               ("/counties/%s/" % b["county"], b["county_name"]), (path, b["name"])]
-    write(path, page(path, title, desc, body, ld, crumbs, og_type="article"))
+    write(path, page(path, title, desc, body, ld, crumbs, og_type="article", lastmod=mod))
 
 def card(b):
     return '<li class="card"><h2><a href="%s">%s</a></h2><p>%s</p></li>' % (bpath(b), E(b["name"]), E(b["angle"]))
@@ -320,10 +346,11 @@ def beaches_index():
     ]
     body = '<h1>Florida beach guides</h1><p class="answer">%d beaches, each tied to a county, city, or Florida State Parks page. Filter them on the <a href="/">homepage picker</a>, or start with a <a href="/regions/">region</a>.</p><ul class="cards">%s</ul>%s' % (
         len(BEACHES), "".join(card(b) for b in BEACHES), faq_html(faqs))
+    pub, mod = hub_dates("/beaches/")
     write("/beaches/", page("/beaches/", "Florida Beach Guides | %s" % BRAND,
                             "Guides to Florida beaches with parking, shelling, dogs, lifeguards, restrooms and access, cited to the managing agency.",
-                            body, [article_ld("Florida beach guides", "/beaches/"), faq_ld(faqs)],
-                            [("/", "Home"), ("/beaches/", "Beaches")], og_type="article"))
+                            body, [article_ld("Florida beach guides", "/beaches/", published=pub, modified=mod), faq_ld(faqs)],
+                            [("/", "Home"), ("/beaches/", "Beaches")], og_type="article", lastmod=mod))
 
 def region_pages():
     cards = []
@@ -336,9 +363,10 @@ def region_pages():
         faqs = [("How should I choose a beach in this region?", R["intro"] + " Open a county, then a beach page, for the parking, dog, lifeguard and access facts, then confirm them on the agency link.")]
         body = '<article class="prose wide"><h1>%s beaches</h1>%s<p class="answer">%s</p>%s<h2>Beaches</h2><ul class="cards">%s</ul><p><a href="/regions/">All regions</a> · <a href="/beaches/">All beaches</a> · <a href="/guides/how-to-pick-a-florida-beach/">How to pick</a></p>%s</article>' % (
             E(R["name"]), byline(), E(R["intro"]), county_html, "".join(card(b) for b in bs), faq_html(faqs))
-        ld = [article_ld(R["name"] + " beaches", path), faq_ld(faqs)]
+        pub, mod = hub_dates(path)
+        ld = [article_ld(R["name"] + " beaches", path, published=pub, modified=mod), faq_ld(faqs)]
         write(path, page(path, "%s Beaches | %s" % (R["name"], BRAND), R["intro"], body, ld,
-                         [("/", "Home"), ("/regions/", "Regions"), (path, R["name"])], og_type="article"))
+                         [("/", "Home"), ("/regions/", "Regions"), (path, R["name"])], og_type="article", lastmod=mod))
         cards.append('<li class="card"><h2><a href="%s">%s</a></h2><p>%d beaches. %s</p></li>' % (path, E(R["name"]), len(bs), E(R["blurb"])))
     hub_faqs = [
         ("Which Florida coast should I open?", "Open the Gulf Coast, the Atlantic Coast, the Panhandle, or the Florida Keys. Each region page lists its counties and beaches."),
@@ -346,10 +374,11 @@ def region_pages():
     ]
     body = '<h1>Florida beaches by region</h1><p class="answer">Four coasts, one question: which beach fits the day you actually have.</p><ul class="cards">%s</ul><p>Or use the <a href="/">homepage picker</a> and the <a href="/beaches/">full beach list</a>.</p>%s' % (
         "".join(cards), faq_html(hub_faqs))
+    pub, mod = hub_dates("/regions/")
     write("/regions/", page("/regions/", "Florida Beaches by Region | %s" % BRAND,
                             "Gulf Coast, Atlantic Coast, Panhandle and Florida Keys beach guides, with county hubs inside each region.",
-                            body, [article_ld("Florida beaches by region", "/regions/"), faq_ld(hub_faqs)],
-                            [("/", "Home"), ("/regions/", "Regions")], og_type="article"))
+                            body, [article_ld("Florida beaches by region", "/regions/", published=pub, modified=mod), faq_ld(hub_faqs)],
+                            [("/", "Home"), ("/regions/", "Regions")], og_type="article", lastmod=mod))
 
 def county_pages():
     for key, name in sorted(COUNTIES.items(), key=lambda kv: kv[1]):
@@ -362,10 +391,11 @@ def county_pages():
         faqs = [("Where do the %s facts come from?" % name, "From the county or city park page, or the Florida State Parks experiences page, linked on each beach. Live red tide and bacteria results stay on FWC and the Florida Department of Health.")]
         body = '<article class="prose wide"><h1>%s beaches</h1>%s<p class="answer">%s</p><ul class="cards">%s</ul>%s%s</article>' % (
             E(name), byline(), E(intro), "".join(card(b) for b in bs), pick_links(bs, region), faq_html(faqs))
+        pub, mod = hub_dates(path)
         write(path, page(path, "%s Beaches | %s" % (name, BRAND), clip(intro), body,
-                         [article_ld(name + " beaches", path), faq_ld(faqs)],
+                         [article_ld(name + " beaches", path, published=pub, modified=mod), faq_ld(faqs)],
                          [("/", "Home"), ("/regions/", "Regions"), ("/regions/%s/" % region, REGIONS[region]["name"]), (path, name)],
-                         og_type="article"))
+                         og_type="article", lastmod=mod))
 
 def pick_links(bs, region):
     bits = [
@@ -393,7 +423,9 @@ def guide(path, title, h1, desc, inner, faqs, sources):
     inner += "<p>%s</p>" % " · ".join(more)
     body = '<article class="prose"><h1>%s</h1>%s%s%s<section class="sources"><h2>Sources</h2>%s<p class="note">Retrieved %s.</p></section></article>' % (
         E(h1), byline(), inner, faq_html(faqs), src_list(sources), PUBLISHED_H)
-    write(path, page(path, title, desc, body, [article_ld(h1, path), faq_ld(faqs)], [("/", "Home"), (path, h1)], og_type="article"))
+    pub, mod = hub_dates(path)
+    write(path, page(path, title, desc, body, [article_ld(h1, path, published=pub, modified=mod), faq_ld(faqs)],
+                      [("/", "Home"), (path, h1)], og_type="article", lastmod=mod))
 
 def guides():
     shell = [b for b in BEACHES if b["shell"] == "yes"]
@@ -522,13 +554,16 @@ def home():
 <h2>Siesta Key and Sarasota</h2><p>Sarasota County is covered beach by beach, including Siesta Key accesses that differ on dogs, parking, and lifeguards.</p><ul class="cols">{sarasota}</ul>
 <h2>How the facts are chosen</h2><p>We cite the managing agency and leave out fees, hours, and fill times the page does not state. <a href="/methodology/">Sources and methods</a>.</p>
 {faq_html(faqs)}'''
+    pub, mod = hub_dates("/")
     write("/", page("/", "Which Florida Beach? Parking, Shells, Dogs and Access",
                     "Pick a Florida beach by parking, shelling, red tide, wheelchairs, dogs, lifeguards and restrooms. Facts from parks, FWC and the health department.",
-                    body, [article_ld("Which Florida beach should you go to?", "/"), faq_ld(faqs)]))
+                    body, [article_ld("Which Florida beach should you go to?", "/", published=pub, modified=mod), faq_ld(faqs)], lastmod=mod))
 
 def simple(path, title, desc, h1, inner, crumb=None, noindex=False, legal=False):
+    pub, mod = hub_dates(path)
     write(path, page(path, title, desc, '<article class="prose"><h1>%s</h1>%s</article>' % (E(h1), inner),
-                     article_ld(h1, path), [("/", "Home"), (path, crumb or h1)], noindex=noindex, legal=legal, og_type="article"))
+                     article_ld(h1, path, published=pub, modified=mod), [("/", "Home"), (path, crumb or h1)],
+                     noindex=noindex, legal=legal, og_type="article", lastmod=mod))
 
 def about_legal():
     simple("/about/", "About %s" % BRAND, "What Which FL Beach is and how the beach guides are checked.", "About Which FL Beach", f'''

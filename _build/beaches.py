@@ -4,7 +4,7 @@
 REGIONS = {
     "gulf": {"name": "Gulf Coast", "blurb": "Sarasota, the islands north of it, Charlotte, Lee and Collier.",
              "intro": "Gulf Coast pages run from Pasco and Pinellas through Sarasota to Collier. The open water is to the west."},
-    "atlantic": {"name": "Atlantic Coast", "blurb": "From Duval and St. Johns down the east coast to Miami-Dade.",
+    "atlantic": {"name": "Atlantic Coast", "blurb": "From Nassau and Duval down the east coast to Miami-Dade.",
                  "intro": "Atlantic pages face east. Surf, inlets and sunrise light are the usual story, and red tide can still arrive by current."},
     "panhandle": {"name": "Panhandle", "blurb": "Franklin, Bay, Walton, Okaloosa and Escambia state park beaches.",
                   "intro": "Panhandle pages are mostly Florida State Parks on the Gulf, plus Big Lagoon on the Intracoastal, which the park says is not a Gulf beach."},
@@ -19,6 +19,7 @@ COUNTIES = {
     "escambia": "Escambia County", "bay": "Bay County", "franklin": "Franklin County", "st-johns": "St. Johns County",
     "indian-river": "Indian River County", "palm-beach": "Palm Beach County", "miami-dade": "Miami-Dade County",
     "duval": "Duval County", "broward": "Broward County", "st-lucie": "St. Lucie County", "monroe": "Monroe County",
+    "nassau": "Nassau County",
 }
 
 def fsp(slug, label):
