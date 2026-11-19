@@ -145,12 +145,17 @@ HUB_DATES = {
     "/about/": (None, "2026-11-19"),
     "/": (None, "2026-11-19"),
     "/guides/best-for-dogs/": (None, "2026-11-19"),
+    "/guides/best-for-snorkeling/": ("2026-11-19", "2026-11-19"),
     "/guides/best-for-accessibility/": (None, "2026-11-19"),
     "/guides/best-for-kids/": (None, "2026-11-19"),
     "/guides/best-for-sunsets/": (None, "2026-11-19"),
     "/privacy/": (None, "2026-11-19"),
     "/ad-disclosure/": (None, "2026-11-19"),
     "/image-policy/": (None, "2026-11-19"),
+    "/regions/keys/": (None, "2026-11-19"),
+    "/counties/monroe/": (None, "2026-11-19"),
+    "/counties/st-lucie/": (None, "2026-11-19"),
+    "/counties/pasco/": (None, "2026-11-19"),
 }
 ADSENSE_PUB = "ca-pub-5681559774142917"
 
@@ -238,8 +243,9 @@ def faq_html(faqs):
     return '<section class="faq" aria-labelledby="faq-h"><h2 id="faq-h">Questions people ask</h2>' + "".join(
         "<details><summary>%s</summary><p>%s</p></details>" % (E(q), E(a)) for q, a in faqs) + "</section>"
 
-def next_reads(items, heading="Related reads"):
+def next_reads(items, heading="Related reads", hid=None):
     """items: list of (href, title, blurb). Thumbnails use the site graphic until a news photo exists for that page."""
+    hid = hid or ("next-" + re.sub(r"[^a-z0-9]+", "-", heading.lower()).strip("-"))
     lis = []
     for href, title, blurb in items:
         lis.append(
@@ -253,18 +259,33 @@ def next_reads(items, heading="Related reads"):
             '</div></li>' % (href, E(title), E(blurb))
         )
     return (
-        '<section class="nextreads" aria-labelledby="next-h">'
-        '<h2 id="next-h">%s</h2>'
+        '<section class="nextreads" aria-labelledby="%s">'
+        '<h2 id="%s">%s</h2>'
         '<ul class="nextread-list">%s</ul>'
         '<p class="note">Thumbnails use the site social graphic until each guide has its own news photo. '
         '<a href="/image-policy/">Image policy</a>.</p></section>'
-    ) % (E(heading), "".join(lis))
+    ) % (hid, hid, E(heading), "".join(lis))
 
 def compare_box(heading, lines_html):
     return (
         '<aside class="compare" aria-labelledby="compare-h">'
         '<h2 id="compare-h">%s</h2>%s</aside>'
     ) % (E(heading), lines_html)
+
+# News-photo thumbnails. Path is relative to the site root. Omit the figure until the file exists.
+SNORKEL_THUMB = "assets/images/guides/shore-snorkeling-florida.jpg"
+SNORKEL_THUMB_SCENE = "snorkeler seen from behind in clear shallow water off a Florida beach, natural light, no faces or logos"
+
+def article_thumb(rel_path, alt):
+    fp = os.path.join(ROOT, rel_path)
+    if not os.path.isfile(fp):
+        return ("<!-- NEEDS IMAGE: /%s (%s) -->" % (rel_path, SNORKEL_THUMB_SCENE))
+    return (
+        '<figure class="article-thumb">'
+        '<a href="/image-policy/"><img src="/%s" alt="%s" width="1280" height="720" loading="eager"></a>'
+        '<figcaption><a href="/image-policy/">AI generated image · image policy</a></figcaption>'
+        '</figure>'
+    ) % (rel_path, E(alt))
 
 def bpath(b):
     return "/beaches/%s/" % b["slug"]
@@ -307,6 +328,8 @@ def tags(b):
         t.append("Kids")
     if b["water"] == "gulf":
         t.append("Gulf sunset direction")
+    if b.get("snorkel") == "yes":
+        t.append("Shore snorkeling")
     return '<p class="tags">' + "".join('<span class="tag">%s</span>' % E(x) for x in t) + "</p>" if t else ""
 
 def red_blurb(b):
@@ -333,6 +356,8 @@ def related(b):
         bits.append('<a href="/guides/best-for-accessibility/">Beaches with a wheelchair or mat</a>')
     if b["water"] == "gulf" or b.get("sunset"):
         bits.append('<a href="/guides/best-for-sunsets/">Sunset direction</a>')
+    if b.get("snorkel") == "yes":
+        bits.append('<a href="/guides/best-for-snorkeling/">Shore snorkeling beaches</a>')
     bits.append('<a href="/guides/how-to-pick-a-florida-beach/">How to pick a Florida beach</a>')
     return "<p>" + " · ".join(bits) + "</p>"
 
@@ -469,6 +494,8 @@ def pick_links(bs, region):
         bits.append('<a href="/guides/best-for-accessibility/">Beaches with a wheelchair or mat</a>')
     if any(b["water"] == "gulf" or b.get("sunset") for b in bs):
         bits.append('<a href="/guides/best-for-sunsets/">Sunset direction</a>')
+    if any(b.get("snorkel") == "yes" for b in bs):
+        bits.append('<a href="/guides/best-for-snorkeling/">Shore snorkeling</a>')
     return "<p>%s</p>" % " · ".join(bits)
 
 def guide(path, title, h1, desc, inner, faqs, sources, verified_h=None, published=None, modified=None):
@@ -492,9 +519,18 @@ def guides():
     access = [b for b in BEACHES if b["chair"] == "yes" or b["mat"] == "yes"]
     sunset_named = [b for b in BEACHES if b.get("sunset")]
     gulf = [b for b in BEACHES if b["water"] == "gulf"]
+    snorkel = [b for b in BEACHES if b.get("snorkel") == "yes"]
 
     def lst(bs):
         return "<ul>" + "".join('<li><a href="%s">%s</a>. %s</li>' % (bpath(b), E(b["name"]), E(b["angle"])) for b in bs) + "</ul>"
+
+    def snorkel_lst(bs):
+        bits = []
+        for b in bs:
+            note = b.get("snorkel_note") or b["angle"]
+            bits.append('<li><a href="%s">%s</a>. %s Entry and parking: see the beach page. Lifeguards: %s</li>' % (
+                bpath(b), E(b["name"]), E(note), E(b["guard_note"])))
+        return "<ul>" + "".join(bits) + "</ul>"
 
     guide("/guides/how-to-pick-a-florida-beach/", "How to Pick a Florida Beach | %s" % BRAND, "How to pick a Florida beach",
           "Pick a Florida beach by parking, dogs, lifeguards, access and shelling, then check FWC and the health department the day you go.",
@@ -579,6 +615,54 @@ def guides():
           ],
           verified_h=TODAY_H, published=PUBLISHED, modified=TODAY)
 
+    snorkel_mid = next_reads([
+        ("/beaches/pennekamp-cannon/", "Cannon Beach at John Pennekamp", "Key Largo shore the park calls its primary snorkel beach, with placed shipwreck artifacts."),
+        ("/beaches/fort-zachary-taylor/", "Fort Zachary Taylor", "Key West shore snorkeling the park page calls among the best from the beach in the Keys."),
+        ("/regions/keys/", "Florida Keys beaches", "State park shores from Key Largo to Key West."),
+    ], "Keep reading")
+    snorkel_end = next_reads([
+        ("/beaches/curry-hammock/", "Curry Hammock State Park", "Shallow seagrass snorkel the park recommends for practice before a reef boat."),
+        ("/guides/red-tide/", "Red tide history and where to check", "FWC status and sample map links; we do not freeze today's cell counts."),
+        ("/guides/best-for-accessibility/", "Beaches with a wheelchair or mat", "Wheelchairs and mats only when the park page lists them."),
+        ("/guides/how-to-pick-a-florida-beach/", "How to pick a Florida beach", "Start with the constraint that would ruin the day."),
+    ], "More to check")
+    snorkel_compare = compare_box(
+        "Compare another shore",
+        '<p>Open <a href="/beaches/pennekamp-cannon/">Cannon Beach</a> for the artifact snorkel, '
+        '<a href="/beaches/fort-zachary-taylor/">Fort Zachary Taylor</a> for Key West breakwaters, '
+        '<a href="/beaches/bahia-honda-loggerhead/">Loggerhead Beach at Bahia Honda</a> for the park nearshore note, or '
+        '<a href="/beaches/fort-pierce-inlet/">Fort Pierce Inlet</a> for the Atlantic reef about 100 yards out.</p>'
+        '<p>Keys hub: <a href="/regions/keys/">Florida Keys</a>. County hubs: '
+        '<a href="/counties/monroe/">Monroe</a>, <a href="/counties/st-lucie/">St. Lucie</a>, '
+        '<a href="/counties/pasco/">Pasco</a>.</p>'
+    )
+    guide("/guides/best-for-snorkeling/", "Florida Beaches for Shore Snorkeling | %s" % BRAND,
+          "Which Florida beaches have shore snorkeling?",
+          "Florida beaches whose state park or county page describes snorkeling from shore, with entry notes and conditions as published.",
+          '''%s
+<div class="answer"><p><strong>How this list is made.</strong> A beach is here only when the managing agency page describes snorkeling from shore or nearshore from that beach. Boat only reef tours do not count as shore snorkeling. We do not invent visibility, fish counts, or a safety rating.</p></div>
+<p>Checked against Florida State Parks experiences pages on %s. Most of the shore snorkeling the agencies describe sits in the <a href="/regions/keys/">Florida Keys</a>, with Fort Pierce Inlet on the Atlantic and Anclote Key on the Gulf as published exceptions. Lifeguard lines below are the park wording. We never call a beach safe; read the flags and the agency page the day you go. For water quality and red tide, use <a href="/guides/red-tide/">our red tide guide</a> and the FWC and Florida Department of Health links, not a saved copy of this page.</p>
+%s
+<h2>Beaches the park page ties to shore snorkeling</h2>
+%s
+<p>Far Beach at John Pennekamp is in the same park as Cannon Beach. The park describes Far Beach as a swim or palm shade shore, not as the artifact snorkel beach, so it is left off this list. Offshore Pennekamp coral is reached by boat tour; that is a different product from Cannon Beach.</p>
+%s
+%s''' % (article_thumb(SNORKEL_THUMB, "Snorkeler in clear shallow water off a Florida beach"),
+         TODAY_H, snorkel_mid, snorkel_lst(snorkel), snorkel_compare, snorkel_end),
+          [("Can I snorkel the Florida reef from every Keys beach?", "No. Florida State Parks pages for Pennekamp describe offshore reef visits by boat. Cannon Beach is the park's primary shore snorkel with placed shipwreck artifacts in shallow water."),
+           ("Do these beaches have lifeguards?", "Only if that beach page says so. The Keys state park pages we cite for shore snorkeling say lifeguards are not provided. Read the beach page."),
+           ("Where should I check water conditions?", "We do not post live water quality. Use FWC red tide tools and the Florida Department of Health Healthy Beaches map the morning you go.")],
+          [
+              ("Florida State Parks: John Pennekamp", "https://www.floridastateparks.org/parks-and-trails/john-pennekamp-coral-reef-state-park/experiences-amenities"),
+              ("Florida State Parks: Fort Zachary Taylor", "https://www.floridastateparks.org/parks-and-trails/fort-zachary-taylor-historic-state-park/experiences-amenities"),
+              ("Florida State Parks: Bahia Honda", "https://www.floridastateparks.org/parks-and-trails/bahia-honda-state-park/experiences-amenities"),
+              ("Florida State Parks: Curry Hammock", "https://www.floridastateparks.org/parks-and-trails/curry-hammock-state-park/experiences-amenities"),
+              ("Florida State Parks: Fort Pierce Inlet", "https://www.floridastateparks.org/parks-and-trails/fort-pierce-inlet-state-park/experiences-amenities"),
+              ("Florida State Parks: Anclote Key", "https://www.floridastateparks.org/parks-and-trails/anclote-key-preserve-state-park/experiences-amenities"),
+              FWC_FAQ, FDOH,
+          ],
+          verified_h=TODAY_H, published=TODAY, modified=TODAY)
+
     guide("/guides/best-for-kids/", "Best Florida Beaches for Kids | %s" % BRAND, "Beaches that suit kids",
           "Florida beaches with a playground, a guarded swim, or a protected cove the park page describes for children.",
           '''<div class="answer"><p><strong>How this list is made.</strong> A beach is here when the agency page lists a playground, staffed lifeguards, or a protected spot it describes for children. Calm looking water is not a promise.</p></div>
@@ -639,6 +723,7 @@ def home():
 <li><a href="/guides/red-tide/">Red tide history and where to check</a></li>
 <li><a href="/guides/best-shelling/">Shelling</a></li>
 <li><a href="/guides/best-for-dogs/">Dogs</a></li>
+<li><a href="/guides/best-for-snorkeling/">Shore snorkeling</a></li>
 <li><a href="/guides/best-for-kids/">Kids</a></li>
 <li><a href="/guides/best-for-accessibility/">Wheelchairs and mats</a></li>
 <li><a href="/guides/best-for-sunsets/">Sunset direction</a></li>
@@ -771,6 +856,7 @@ def extras():
              "- [Red tide history and where to check](%s)" % url("/guides/red-tide/"),
              "- [Shelling](%s)" % url("/guides/best-shelling/"),
              "- [Dogs](%s)" % url("/guides/best-for-dogs/"),
+             "- [Shore snorkeling](%s)" % url("/guides/best-for-snorkeling/"),
              "- [Kids](%s)" % url("/guides/best-for-kids/"),
              "- [Wheelchairs and mats](%s)" % url("/guides/best-for-accessibility/"),
              "- [Sunset direction](%s)" % url("/guides/best-for-sunsets/"),
