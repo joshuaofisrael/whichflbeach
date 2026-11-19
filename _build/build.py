@@ -125,17 +125,37 @@ def human_date(iso):
 
 # Pages whose content changed on this run only. Everything else keeps its original
 # PUBLISHED lastmod untouched -- no manufactured freshness across the rest of the site.
-TODAY = "2026-11-18"
-NEW_HUB_PATHS = {"/counties/nassau/"}
-CHANGED_HUB_PATHS = {"/beaches/", "/counties/duval/", "/regions/atlantic/", "/regions/",
-                     "/about/", "/", "/guides/best-shelling/"}
+TODAY = "2026-11-19"
+TODAY_H = "19 Nov 2026"
+# Explicit lastmod (and first-publish when the second value is set) for hubs that changed
+# after the site-wide PUBLISHED date. Unlisted hubs keep PUBLISHED.
+HUB_DATES = {
+    # First published 18 Nov
+    "/counties/nassau/": ("2026-11-18", "2026-11-18"),
+    # Material hub edits 18 Nov (new Atlantic beaches)
+    "/counties/duval/": (None, "2026-11-18"),
+    "/regions/atlantic/": (None, "2026-11-18"),
+    "/guides/best-shelling/": (None, "2026-11-18"),
+    # Material edits 19 Nov (dogs refresh, AdSense/privacy, Siesta and Fort De Soto fact updates)
+    "/beaches/": (None, "2026-11-19"),
+    "/regions/": (None, "2026-11-19"),
+    "/regions/gulf/": (None, "2026-11-19"),
+    "/counties/pinellas/": (None, "2026-11-19"),
+    "/counties/sarasota/": (None, "2026-11-19"),
+    "/about/": (None, "2026-11-19"),
+    "/": (None, "2026-11-19"),
+    "/guides/best-for-dogs/": (None, "2026-11-19"),
+    "/guides/best-for-accessibility/": (None, "2026-11-19"),
+    "/guides/best-for-kids/": (None, "2026-11-19"),
+    "/guides/best-for-sunsets/": (None, "2026-11-19"),
+    "/privacy/": (None, "2026-11-19"),
+    "/ad-disclosure/": (None, "2026-11-19"),
+    "/image-policy/": (None, "2026-11-19"),
+}
+ADSENSE_PUB = "ca-pub-5681559774142917"
 
 def hub_dates(path):
-    if path in NEW_HUB_PATHS:
-        return TODAY, TODAY
-    if path in CHANGED_HUB_PATHS:
-        return None, TODAY
-    return None, None
+    return HUB_DATES.get(path, (None, None))
 
 def page(path, title, desc, body, jsonld=None, crumbs=None, noindex=False, legal=False, og_type="website", lastmod=None):
     if len(title) >= 60:
@@ -169,12 +189,19 @@ def page(path, title, desc, body, jsonld=None, crumbs=None, noindex=False, legal
     tags = analytics_tags()
     legal_line = '<p class="legal-line">© 2026 Joshua Israel Ventures LLC. All rights reserved. Which FL Beach is a trade name of Joshua Israel Ventures LLC, a Florida limited liability company.</p>' if legal else ""
     cookie = ' | <a href="#cookie-settings" id="cookie-settings">Cookie settings</a>' if LAUNCH else ""
+    adsense = ""
+    if LAUNCH:
+        adsense = (
+            '<meta name="google-adsense-account" content="%s">'
+            '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=%s" crossorigin="anonymous"></script>'
+        ) % (ADSENSE_PUB, ADSENSE_PUB)
     return f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{E(title)}</title><meta name="description" content="{E(desc)}"><link rel="canonical" href="{canon}">
 <meta name="robots" content="{robots}">
+{adsense}
 <meta property="og:type" content="{E(og_type)}"><meta property="og:site_name" content="{BRAND}"><meta property="og:locale" content="en_US"><meta property="og:title" content="{E(title)}"><meta property="og:description" content="{E(desc)}"><meta property="og:url" content="{canon}"><meta property="og:image" content="{url('/og.png')}"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="{E(title)}"><meta name="twitter:description" content="{E(desc)}"><meta name="twitter:image" content="{url('/og.png')}">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/assets/style.css?v=2">{ldh}
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/assets/style.css?v=3">{ldh}
 </head><body><a class="skip" href="#main">Skip to content</a>
 <header class="site"><div class="wrap"><a class="brand" href="/">{LOGO}<span>{BRAND}</span></a><nav class="main" aria-label="Main">{nav}</nav></div></header>
 <main id="main" class="wrap">{bc}{body}</main>
@@ -210,6 +237,34 @@ def faq_ld(faqs):
 def faq_html(faqs):
     return '<section class="faq" aria-labelledby="faq-h"><h2 id="faq-h">Questions people ask</h2>' + "".join(
         "<details><summary>%s</summary><p>%s</p></details>" % (E(q), E(a)) for q, a in faqs) + "</section>"
+
+def next_reads(items, heading="Related reads"):
+    """items: list of (href, title, blurb). Thumbnails use the site graphic until a news photo exists for that page."""
+    lis = []
+    for href, title, blurb in items:
+        lis.append(
+            '<li class="nextread">'
+            '<a class="nextread-thumb" href="/image-policy/">'
+            '<img src="/og.png" alt="" width="320" height="168" loading="lazy">'
+            '</a>'
+            '<div class="nextread-body">'
+            '<a href="%s">%s</a>'
+            '<p>%s</p>'
+            '</div></li>' % (href, E(title), E(blurb))
+        )
+    return (
+        '<section class="nextreads" aria-labelledby="next-h">'
+        '<h2 id="next-h">%s</h2>'
+        '<ul class="nextread-list">%s</ul>'
+        '<p class="note">Thumbnails use the site social graphic until each guide has its own news photo. '
+        '<a href="/image-policy/">Image policy</a>.</p></section>'
+    ) % (E(heading), "".join(lis))
+
+def compare_box(heading, lines_html):
+    return (
+        '<aside class="compare" aria-labelledby="compare-h">'
+        '<h2 id="compare-h">%s</h2>%s</aside>'
+    ) % (E(heading), lines_html)
 
 def bpath(b):
     return "/beaches/%s/" % b["slug"]
@@ -416,14 +471,17 @@ def pick_links(bs, region):
         bits.append('<a href="/guides/best-for-sunsets/">Sunset direction</a>')
     return "<p>%s</p>" % " · ".join(bits)
 
-def guide(path, title, h1, desc, inner, faqs, sources):
+def guide(path, title, h1, desc, inner, faqs, sources, verified_h=None, published=None, modified=None):
     more = ['<a href="/">Homepage picker</a>', '<a href="/beaches/">All beaches</a>', '<a href="/regions/">Regions</a>']
     if path != "/guides/how-to-pick-a-florida-beach/":
         more.append('<a href="/guides/how-to-pick-a-florida-beach/">How to pick</a>')
     inner += "<p>%s</p>" % " · ".join(more)
+    v_h = verified_h or PUBLISHED_H
+    hub_pub, hub_mod = hub_dates(path)
+    pub = published if published is not None else hub_pub
+    mod = modified if modified is not None else hub_mod
     body = '<article class="prose"><h1>%s</h1>%s%s%s<section class="sources"><h2>Sources</h2>%s<p class="note">Retrieved %s.</p></section></article>' % (
-        E(h1), byline(), inner, faq_html(faqs), src_list(sources), PUBLISHED_H)
-    pub, mod = hub_dates(path)
+        E(h1), byline(v_h), inner, faq_html(faqs), src_list(sources), v_h)
     write(path, page(path, title, desc, body, [article_ld(h1, path, published=pub, modified=mod), faq_ld(faqs)],
                       [("/", "Home"), (path, h1)], og_type="article", lastmod=mod))
 
@@ -477,14 +535,49 @@ def guides():
            ("Why is a famous shelling beach missing?", "If the county or state park page we checked does not mention shells, it is not on this list. Tell us if a newer page does.")],
           [FWC_SHELLS] + shell[0]["sources"][:2])
 
-    guide("/guides/best-for-dogs/", "Best Florida Beaches for Dogs | %s" % BRAND, "Beaches that allow dogs",
+    dogs_mid = next_reads([
+        ("/beaches/fort-de-soto/", "Fort De Soto Park", "Pinellas County's only beach where dogs may use a designated dog beach."),
+        ("/beaches/honeymoon-island/", "Honeymoon Island State Park", "The state park pet beach on the southern tip, separate from the main swim shore."),
+        ("/guides/best-for-kids/", "Beaches that suit kids", "Playgrounds, guarded swims, and coves the park page describes for children."),
+    ], "Keep reading")
+    dogs_end = next_reads([
+        ("/guides/best-shelling/", "Beaches where shelling is described", "Empty shells and live animals follow different FWC and park rules."),
+        ("/guides/how-to-pick-a-florida-beach/", "How to pick a Florida beach", "Start with the constraint that would ruin the day, then open the agency page."),
+        ("/regions/gulf/", "Gulf Coast beaches", "Gulf pages from Pasco and Pinellas through Sarasota to Collier."),
+        ("/counties/sarasota/", "Sarasota County beaches", "County directory beaches, including the two dog friendly sand listings we cover."),
+    ], "More to check")
+    dogs_compare = compare_box(
+        "Check another beach",
+        '<p>Open a beach page for the parking and lifeguard lines before you load the crate. Or jump to '
+        '<a href="/beaches/fort-de-soto/">Fort De Soto</a>, '
+        '<a href="/beaches/honeymoon-island/">Honeymoon Island</a>, '
+        '<a href="/beaches/maxine-barritt/">Maxine Barritt Park</a>, or '
+        '<a href="/beaches/siesta-access-1/">Siesta Key Beach Access 1</a>.</p>'
+        '<p>Prefer a filter? Use the <a href="/">homepage picker</a> with Dogs set to Allowed on the sand.</p>'
+    )
+    guide("/guides/best-for-dogs/", "Florida Beaches That Allow Dogs on Sand | %s" % BRAND, "Which Florida beaches allow dogs on the sand?",
           "Florida beaches where the park page allows dogs on the sand or in a designated dog beach. Service animals are a separate rule.",
           '''<div class="answer"><p><strong>How this list is made.</strong> The sand allows a dog only when the managing agency says so. A dog park next to a beach is not the beach. Service animals are not pets, and the park pages describe them separately.</p></div>
-<p>Most Florida State Parks pages we checked keep pets off the beach. Honeymoon Island is the clear state park exception, with a pet beach the page describes. County rules are local. Read the note on each page before you unload the dog.</p>
-<h2>Beaches</h2>%s''' % lst(dogs),
+<p>We rechecked the linked county and Florida State Parks pages on %s. The five beaches below still match a published dog rule for sand or a named pet beach. Most Florida State Parks pages we checked still keep pets off the beach. <a href="/beaches/honeymoon-island/">Honeymoon Island</a> remains the clear state park exception, with a pet beach at the southern tip. County rules stay local. Read the note on each beach page before you unload the dog.</p>
+%s
+<h2>Beaches with a published dog rule</h2>%s
+<p>Sarasota County's beach directory still marks <a href="/beaches/maxine-barritt/">Maxine Barritt Park</a> and <a href="/beaches/siesta-access-1/">Siesta Key Beach Access 1</a> as dog friendly with a leash required. The same directory lists other Siesta accesses without that mark, and the Siesta Beach destination page still allows only service animals on that main beach.</p>
+<p>Pinellas County still says dogs are not allowed on county beaches except the dog beach at <a href="/beaches/fort-de-soto/">Fort De Soto</a>, reached from the dog park. The county page also notes that Fort De Soto ranked among top dog friendly beaches in a 2024 list; that ranking is not our score, and the sand rule is still the designated dog beach only.</p>
+<p><a href="/beaches/anclote-key/">Anclote Key Preserve</a> still bars pets on Anclote Key itself. Pets are permitted only on North Anclote Bar, on a six foot handheld leash, per the state park page.</p>
+%s
+%s''' % (TODAY_H, dogs_mid, lst(dogs), dogs_compare, dogs_end),
           [("Can I bring my dog to any Florida beach?", "No. Many county and state park pages prohibit pets on the sand. Use this list, then read the beach page."),
-           ("Are service animals allowed?", "Park pages we cite say service animals are welcome more broadly than pets. Confirm the definition on that agency's page.")],
-          dogs[0]["sources"][:2] + [FWC_FAQ])
+           ("Are service animals allowed?", "Park pages we cite say service animals are welcome more broadly than pets. Confirm the definition on that agency's page."),
+           ("Is a dog park the same as a dog beach?", "No. A fenced dog park next to the sand is not permission to walk the open beach. Fort De Soto is the Pinellas exception with a designated dog beach reached from its dog park.")],
+          [
+              ("Sarasota County: beach directory", "https://www.sarasotacountyparks.com/parks-and-facilities/discover-a-park/type-of-park/beaches"),
+              ("Pinellas County: Fort De Soto Park", "https://pinellas.gov/parks/fort-de-soto-park/"),
+              ("Pinellas County: dog parks", "https://pinellas.gov/dog-parks/"),
+              ("Florida State Parks: Honeymoon Island", "https://www.floridastateparks.org/parks-and-trails/honeymoon-island-state-park/experiences-amenities"),
+              ("Florida State Parks: Anclote Key", "https://www.floridastateparks.org/parks-and-trails/anclote-key-preserve-state-park/experiences-amenities"),
+              FWC_FAQ,
+          ],
+          verified_h=TODAY_H, published=PUBLISHED, modified=TODAY)
 
     guide("/guides/best-for-kids/", "Best Florida Beaches for Kids | %s" % BRAND, "Beaches that suit kids",
           "Florida beaches with a playground, a guarded swim, or a protected cove the park page describes for children.",
@@ -581,11 +674,11 @@ def about_legal():
 <h2>Shells and health</h2><p>Shell rules follow the FWC recreational sea shell page. Health warnings about red tide are attributed to FWC or the health department. They are not medical advice from this site.</p>
 <h2>Our read of who a beach suits</h2><p>The "who it suits" line is our planning note from the published facts. It is labeled that way. It is not a rule of the park.</p>
 <h2>Corrections</h2><p><a href="/contact/">Email us</a> with the page address and the agency link that shows the change. We update the verified date when we recheck.</p>''', "Sources and methods")
-    simple("/image-policy/", "Image Policy | %s" % BRAND, "How Which FL Beach handles graphics. The site does not use photographs of beaches.", "Image policy", f'''
-<p>Last updated {PUBLISHED_H}.</p>
+    simple("/image-policy/", "Image Policy | %s" % BRAND, "How Which FL Beach handles graphics, social images, and AI generated news photos.", "Image policy", f'''
+<p>Last updated {TODAY_H}.</p>
 <h2>Graphics</h2><p>The logo and the social image are original graphics we drew for this site. They are not photographs of a beach, and they are not copies of a park map or logo.</p>
-<h2>Photos</h2><p>Beach pages do not use photos. We do not copy park photography. Any photograph that is added later will link to this page.</p>
-<h2>AI generated images</h2><p>If we add an AI generated illustration later, it will carry a visible credit that says AI generated image, it will not depict a real person, and it will not be presented as a photo of a real beach.</p>
+<h2>Photos</h2><p>We do not copy park photography. When a guide uses a news style thumbnail, the image links here and carries a credit.</p>
+<h2>AI generated images</h2><p>Guide thumbnails that are AI generated carry a visible credit that says AI generated image, link to this page, do not depict a real identifiable person, and are not presented as documentary photos of a named park. Until a guide has its own news photo, related read cards may use the site social graphic instead.</p>
 <h2>Names</h2><p>We do not display agency logos. Names identify places.</p>
 <p>If you believe a graphic uses your work, see the <a href="/copyright/">copyright policy</a> or <a href="/contact/">contact us</a>.</p>''', "Image policy")
     simple("/contact/", "Contact %s" % BRAND, "Email Which FL Beach about a correction or a beach to add.", "Contact us", f'''
@@ -605,13 +698,15 @@ def about_legal():
 <h2>Indemnity</h2><p>You agree to indemnify Joshua Israel Ventures LLC against claims arising from your misuse of the site or your breach of these terms.</p>
 <h2>Governing law</h2><p>These terms are governed by the laws of the State of Florida, without regard to conflict of law rules. Disputes will be resolved in the state or federal courts located in Florida, and you consent to their jurisdiction.</p>
 <h2>Changes</h2><p>We may update these terms. The date above is the latest version. Questions: <a href="/contact/">contact us</a>.</p>'''),
-    "/privacy/": ("Privacy Policy", f'''<p>Last updated {D}. This policy explains how Which FL Beach (whichflbeach.com), a trade name of Joshua Israel Ventures LLC, a Florida limited liability company, handles information.</p>
+    "/privacy/": ("Privacy Policy", f'''<p>Last updated {TODAY_H}. This policy explains how Which FL Beach (whichflbeach.com), a trade name of Joshua Israel Ventures LLC, a Florida limited liability company, handles information.</p>
 <h2>Analytics</h2><p>The public site uses Cloudflare Web Analytics and Google Analytics 4.</p>
 <p>Cloudflare Web Analytics counts visits. It does not use cookies and does not track you across sites. The launch build includes that beacon on every page. The preview build does not include it.</p>
-<p>Google Analytics 4 measures page visits for this site. The launch build loads the Google tag (gtag) only after you accept the cookie banner. Until then, Google Consent Mode v2 defaults are denied for ad storage, ad user data, ad personalization, and analytics storage. If you accept, analytics storage is set to granted and the tag loads for our GA4 property. Ad storage stays denied. This site does not run ads. If you reject, the tag is not loaded. Use the Cookie settings link in the footer to change your choice. That choice is stored in local storage in your browser. The preview build does not include Google Analytics 4.</p>
+<p>Google Analytics 4 measures page visits for this site. The launch build loads the Google tag (gtag) only after you accept the cookie banner. Until then, Google Consent Mode v2 defaults are denied for ad storage, ad user data, ad personalization, and analytics storage. If you accept, analytics storage is set to granted and the tag loads for our GA4 property. Ad storage stays denied until advertising consent is collected. If you reject, the tag is not loaded. Use the Cookie settings link in the footer to change your choice. That choice is stored in local storage in your browser. The preview build does not include Google Analytics 4.</p>
 <h2>Contact</h2><p>If you email {CONTACT}, we use your message and your address to reply. We keep them only as long as we need for that reply and for a record of a correction.</p>
-<h2>Advertising</h2><p>The site shows no ads today. If we add ads later, for example through Google AdSense, vendors including Google may use cookies to serve ads based on prior visits. You would be able to opt out of personalized advertising at Google Ads Settings and at aboutads.info. Where the law requires it, we will ask for consent before advertising cookies are set. We will update this policy before any ads go live.</p>
-<h2>Cookies</h2><p>Which FL Beach itself sets no cookies. Google Analytics 4 may set cookies only after you accept. Cloudflare Web Analytics does not use cookies. The site works if your browser blocks cookies.</p>
+<h2>Advertising</h2><p>Which FL Beach uses Google AdSense account {ADSENSE_PUB}. The site includes the AdSense script and a google-adsense-account meta tag so Google can verify the property. We have not placed ad units on pages yet, so you should not see display ads today.</p>
+<p>When ad units go live, Google and its partners may use cookies or similar technology to serve and measure ads, including ads based on prior visits to this or other sites. You can opt out of personalized advertising at Google Ads Settings and at aboutads.info. Where the law requires it, we will ask for consent before advertising cookies are set. Our Consent Mode defaults keep ad storage denied until that consent step is added. Publisher details also appear in the site root ads.txt file.</p>
+<p>An advertiser does not choose beach facts. See the <a href="/ad-disclosure/">advertising disclosure</a>.</p>
+<h2>Cookies</h2><p>Which FL Beach itself sets no cookies. Google Analytics 4 may set cookies only after you accept. Cloudflare Web Analytics does not use cookies. When AdSense ad units are active and consent is granted, Google may set advertising cookies. The site works if your browser blocks cookies.</p>
 <h2>Hosting</h2><p>The site is hosted on GitHub Pages, which may log IP addresses for security and operations.</p>
 <h2>Your rights</h2><p>You can ask us to access, correct or delete personal information we hold. Email <a href="mailto:{CONTACT}">{CONTACT}</a>. Residents of some states and countries may have additional rights, which we will honor.</p>
 <h2>Children</h2><p>The site is for a general audience and is not directed at children under 13. We do not knowingly collect personal information from children.</p>
@@ -626,13 +721,15 @@ def about_legal():
 <h2>Reporting infringement</h2><p>If you believe material on this site infringes your copyright, email <a href="mailto:{CONTACT}">{CONTACT}</a> with: your name and contact details; a description of the copyrighted work; the URL of the material; a statement that you have a good faith belief the use is not authorized; a statement, under penalty of perjury, that the notice is accurate and that you are the owner or authorized to act for the owner; and your physical or electronic signature. We will review notices and remove or disable material where that is the right step.</p>
 <h2>Counter notice</h2><p>If your material was removed and you believe that was a mistake, you may send a counter notice to the same address with the details required by 17 U.S.C. section 512(g).</p>
 <h2>Repeat infringement</h2><p>We will act against repeat infringement where that is appropriate.</p>'''),
-    "/ad-disclosure/": ("Advertising and Affiliate Disclosure", f'''<p>Last updated {D}. Which FL Beach is free to use. The site shows no ads and has no affiliate links. We may add advertising later, for example through Google AdSense, or links that pay a commission.</p>
-<p>If ads appear they will be separate from the guides and labeled. An advertiser will not change a beach fact. If we add a paid link we will label it.</p>
+    "/ad-disclosure/": ("Advertising and Affiliate Disclosure", f'''<p>Last updated {TODAY_H}. Which FL Beach is free to use. The site is prepared for Google AdSense (publisher {ADSENSE_PUB}) and publishes an ads.txt line for that account. Display ad units are not placed on pages yet, so you should not see ads in the guides today. The site has no affiliate links.</p>
+<p>When ads appear they will be separate from the guides and labeled. An advertiser will not change a beach fact. If we add a paid link we will label it.</p>
 <h2>Editorial independence</h2><p>No park agency pays for a mention. Questions: <a href="/contact/">contact us</a>.</p>'''),
     }
     for p, (t, inner) in legal.items():
         body = '<article class="prose"><h1>%s</h1>%s<p class="legal-line">© 2026 Joshua Israel Ventures LLC. All rights reserved. Which FL Beach is a trade name of Joshua Israel Ventures LLC, a Florida limited liability company.</p></article>' % (E(t), inner)
-        write(p, page(p, "%s | %s" % (t, BRAND), "%s for Which FL Beach (whichflbeach.com)." % t, body, article_ld(t, p), [("/", "Home"), (p, t)], og_type="article"))
+        pub, mod = hub_dates(p)
+        write(p, page(p, "%s | %s" % (t, BRAND), "%s for Which FL Beach (whichflbeach.com)." % t, body,
+                      article_ld(t, p, published=pub, modified=mod), [("/", "Home"), (p, t)], og_type="article", lastmod=mod))
 
 def not_found():
     body = '<h1>Page not found</h1><p>That address is not a beach guide. Try the <a href="/beaches/">beach list</a> or the <a href="/">picker</a>.</p>'
@@ -657,6 +754,8 @@ def extras():
         f.write("whichflbeach.com\n")
     with open(os.path.join(ROOT, INDEXNOW_KEY + ".txt"), "w") as f:
         f.write(INDEXNOW_KEY)
+    with open(os.path.join(ROOT, "ads.txt"), "w") as f:
+        f.write("google.com, pub-5681559774142917, DIRECT, f08c47fec0942fa0\n")
     bots = ["*", "Googlebot", "Bingbot", "Mediapartners-Google", "OAI-SearchBot", "ChatGPT-User", "GPTBot",
             "PerplexityBot", "Perplexity-User", "ClaudeBot", "Claude-SearchBot", "Claude-User", "Google-Extended",
             "Applebot", "Applebot-Extended", "Bytespider", "DuckAssistBot", "Amazonbot", "CCBot"]

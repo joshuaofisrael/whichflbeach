@@ -49,7 +49,7 @@ add(slug="cortez-beach", name="Cortez Beach", short="Cortez Beach", region="gulf
 add(slug="fort-de-soto", name="Fort De Soto Park", short="Fort De Soto", region="gulf", county="pinellas", county_name="Pinellas County",
     place="Tierra Verde", manager="Pinellas County", water="gulf", dogs="designated", shell="unstated", chair="unstated", mat="unstated",
     guard="seasonal", restroom="yes", kids=True, sunset=False,
-    parking="The park page lists beaches, two swim centers and trails. It does not state a parking price on the page we checked. Hours on that page are 7 a.m. to sunset, seven days a week.",
+    parking="The park page lists a County parking fee of 6 dollars, payable by mobile app, pay by text, terminal, or annual pass. The app and pay by text options add a 0.35 dollar convenience fee. Hours on that page are 7 a.m. to sunset, seven days a week.",
     fills=NOFILL,
     dogs_note="Pinellas County says dogs are not allowed on county beaches except the dog beach at Fort De Soto. That beach is reached from the dog park, and dogs may be off leash there if they are under voice control. The rest of the beach is not a dog beach.",
     shell_note=NOSHELL,
@@ -61,7 +61,8 @@ add(slug="fort-de-soto", name="Fort De Soto Park", short="Fort De Soto", region=
     who="It suits a long beach day, a playground, and a dog only if you use the designated dog beach. It is a poor match if you need a beach wheelchair the page does not list.",
     sources=[("Pinellas County: Fort De Soto Park", "https://pinellas.gov/parks/fort-de-soto-park/"), PIN_FAQ, PIN_DOG, PIN_LIFE],
     nearby=["sand-key", "egmont-key"],
-    extra=["The page says the park has almost three miles of beach and ferry service to Egmont Key and to Shell Key. Concession details are on the park page."])
+    published="2026-11-19",
+    extra=["The page says the park has almost three miles of beach and ferry service to Egmont Key and to Shell Key. Concession details are on the park page. The county page also notes a 2024 dog friendly beach ranking; that list is not our score, and the sand rule is still the designated dog beach only."])
 
 add(slug="sand-key", name="Sand Key Park", short="Sand Key Park", region="gulf", county="pinellas", county_name="Pinellas County",
     place="Clearwater", manager="Pinellas County", water="gulf", dogs="no", shell="unstated", chair="unstated", mat="unstated",
