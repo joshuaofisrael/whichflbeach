@@ -73,12 +73,13 @@ add(slug="siesta-beach", name="Siesta Beach", short="Siesta Beach", region="gulf
     dogs_note="The Siesta Beach page says only service animals are allowed on Siesta Beach.",
     shell_note="The Siesta Beach page describes nearly 100 percent quartz crystal sand and says it does not get hot. It does not describe shelling.",
     chair_note="The Siesta Beach page says beach wheelchairs are free, year round, from the parking areas to the shore, and that they are signed out at the main pavilion concession. Users complete a liability form. The page tells you to ask about availability. We do not print the phone number here.",
-    mat_note="The Siesta Beach page says an access mat extends 454 feet toward the Gulf.",
-    guard_note="The Siesta Beach page says lifeguards are on duty 10 a.m. to 5 p.m., seven days a week.",
+    mat_note="The Sarasota County beaches page says an access mat at Siesta Beach extends 504 feet toward the Gulf.",
+    guard_note="The Sarasota County beaches page says lifeguards are on duty 10 a.m. to 4:45 p.m., seven days a week, at six named beaches including Siesta Beach.",
     rest_note="The Siesta Beach page says there are plenty of restrooms and no dedicated changing rooms.",
-    angle="Siesta Beach is the Sarasota County park with the large free lot, a published lifeguard window, a free beach wheelchair and a 454 foot access mat.",
+    angle="Siesta Beach is the Sarasota County park with the large free lot, a published lifeguard window, a free beach wheelchair and a 504 foot access mat.",
     who="It suits a group that wants a staffed Gulf swim, a playground, food, and step free help, and that can use the free trolley if the lot is busy. It does not suit someone bringing a pet dog.",
     sources=[SIESTA, SRQ, SRQH], nearby=["turtle-beach", "siesta-access-12", "siesta-access-1"],
+    published="2026-11-19",
     extra=["The county also lists a shaded playground, concessions, sand volleyball, pickleball and tennis. Alcohol is allowed for people of legal drinking age. Glass is prohibited. The page links out for red tide instead of describing current conditions."])
 
 srq("turtle-beach", "Turtle Beach", "Turtle Beach", "Siesta Key", "yes", "unstated", "unstated", SRQ_DOG_QUIET, SRQ_PARK, NOFILL,
