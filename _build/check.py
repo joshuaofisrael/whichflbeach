@@ -5,6 +5,24 @@ Root paths in both modes. noindex on every page unless --launch.
 --launch also requires a non-empty GA4_ID, the Cloudflare beacon, and the GA4 loader.
 """
 import glob, re, json, os, sys, html
+
+# Paths in _build/thin-noindex.txt are intentionally noindex (AdSense low-value-content fix, 20 Nov 2026).
+import os as _os
+_THIN = set()
+try:
+    with open(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "thin-noindex.txt"), encoding="utf-8") as _fh:
+        _THIN = {l.strip().strip("/") for l in _fh if l.strip() and not l.startswith("#")}
+except FileNotFoundError:
+    pass
+
+
+def _thin_rel(rel):
+    r = str(rel).replace("\\", "/")
+    if r.endswith("index.html"):
+        r = r[: -len("index.html")]
+    return r.strip("/") in _THIN
+
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LAUNCH = "--launch" in sys.argv
 LEGAL = {"terms", "privacy", "disclaimer", "copyright", "ad-disclosure"}
@@ -70,7 +88,7 @@ for f in files:
             print("nocookie", rel); bad += 1
         if GA4 is None or ("window.GA4_ID = %s;" % json.dumps(GA4)) not in h:
             print("ga4-id-page", rel); bad += 1
-        if "noindex" in h and rel != "404.html":
+        if "noindex" in h and rel != "404.html" and not _thin_rel(rel):
             print("noindex", rel); bad += 1
     elif "noindex" not in h:
         print("preview-missing-noindex", rel); bad += 1

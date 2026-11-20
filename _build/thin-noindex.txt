@@ -1,0 +1,46 @@
+# Pages with under ~150 words of page-specific text (5-gram uniqueness vs the rest of the site),
+# set to noindex,follow and kept out of the sitemap for AdSense low-value-content review (20 Nov 2026).
+# Remove a path from this list once the page has real, unique substance.
+beaches/blind-pass
+beaches/caspersen-beach
+beaches/lido-beach
+beaches/manasota-beach
+beaches/nokomis-beach
+beaches/north-brohard
+beaches/north-jetty
+beaches/palmer-point
+beaches/service-club
+beaches/siesta-access-10
+beaches/siesta-access-12
+beaches/siesta-access-13
+beaches/siesta-access-3
+beaches/siesta-access-3b
+beaches/siesta-access-4
+beaches/siesta-access-5
+beaches/siesta-access-7
+beaches/siesta-access-8
+beaches/siesta-access-9
+beaches/south-brohard
+beaches/south-lido
+beaches/turtle-beach
+beaches/turtle-campground
+beaches/venice-beach
+counties/bay
+counties/broward
+counties/charlotte
+counties/collier
+counties/duval
+counties/escambia
+counties/franklin
+counties/hillsborough
+counties/indian-river
+counties/lee
+counties/miami-dade
+counties/nassau
+counties/okaloosa
+counties/palm-beach
+counties/pasco
+counties/pinellas
+counties/st-johns
+counties/st-lucie
+counties/walton
