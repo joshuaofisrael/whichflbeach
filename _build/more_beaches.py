@@ -211,8 +211,26 @@ park("delnor-wiggins", "Delnor Wiggins Pass State Park", "Delnor Wiggins Pass", 
      rest_note="The page says each parking area has a portable restroom. It says running water is not available. Hand sanitizer is provided.",
      angle="Delnor Wiggins is the Collier state park the page credits with some of the best Gulf shelling, four beach lots, and both manual and electric beach wheelchairs.",
      who="It suits a shell day and a visitor who needs a chair if they arrive when one is free. It does not suit someone who needs a flush restroom or a lifeguard.",
-     sources=[fsp("delnor-wiggins-pass-state-park", "Delnor-Wiggins Pass")], nearby=["lovers-key", "venice-beach"],
-     extra=["Swimming stops at the double red flags by the north end of parking area four because the page warns of currents in the pass. The page also calls the park a sunset picnic spot."])
+     sources=[fsp("delnor-wiggins-pass-state-park", "Delnor-Wiggins Pass")], nearby=["lovers-key", "coquina-beach", "henderson-beach"],
+     verified="2026-11-20", modified="2026-11-20",
+     extra_html=[
+         '<p>Rechecked 20 Nov 2026. The swimming section says dangerous currents and riptides can occur in Wiggins Pass, so swimming runs from the southern boundary to the double red flags at the northern end of parking area four. The fishing section says that northern stretch is closed to water entry and anglers must stay on dry land. Warning flag signs are posted at each parking area entrance and on the beach. The park\'s flag list includes a green clearance this site will not repeat. Read the sign at the lot. We do not post today\'s color. The picnicking section still calls the park a lunch or sunset picnic spot, and the page says lifeguards are not provided.</p>',
+         '<p>That double red line is a boundary in the park text, not a daily forecast. <a href="/guides/best-for-sunsets/">The sunset guide</a> is where this page sits next to <a href="/beaches/coquina-beach/">Coquina</a>, which has a county lifeguard listing, and <a href="/beaches/henderson-beach/">Henderson Beach</a>, which mentions sunset and does not say a lifeguard is on duty.</p>',
+     ],
+     reads={
+         "mid": [
+             ("/beaches/coquina-beach/", "Coquina Beach", "A sunset mention plus a county lifeguard listing."),
+             ("/beaches/henderson-beach/", "Henderson Beach", "A sunset mention, flag signs, and no lifeguard promise."),
+             ("/beaches/lovers-key/", "Lovers Key", "Another Lee County shelling page. The park says the lot fills on busy weekends."),
+         ],
+         "end": [
+             ("/guides/best-for-sunsets/", "Where the sun sets over the water", "Only the park pages that mention sunset, not every Gulf beach."),
+             ("/guides/best-shelling/", "Beaches where shelling is described", "Delnor-Wiggins is here because the park page talks about shells."),
+             ("/regions/gulf/", "Gulf Coast beaches", "The county map, including pages that never mention sunset."),
+             ("/guides/best-for-accessibility/", "Beaches with a wheelchair or mat", "Manual chairs in two lots, plus an electric chair."),
+         ],
+         "compare": '<p><a href="/beaches/coquina-beach/">Coquina</a> pairs a sunset sentence with lifeguards the county names. <a href="/beaches/henderson-beach/">Henderson</a> mentions sunset and flag signs, with 422 day use spaces and no lifeguard promise. Delnor-Wiggins is the shelling park that uses double red flags as the line where swimming stops at the pass.</p>',
+     })
 
 # Panhandle
 park("grayton-beach", "Grayton Beach State Park", "Grayton Beach", "panhandle", "walton", "Walton County", "Grayton Beach", "gulf",
@@ -376,19 +394,49 @@ park("bald-point-north", "Bald Point North End Beach", "Bald Point North End", "
      sources=[fsp("bald-point-state-park", "Bald Point")], nearby=["bald-point-sunrise", "st-george-island"])
 
 # Atlantic
-park("anastasia", "Anastasia State Park", "Anastasia State Park", "atlantic", "st-johns", "St. Johns County", "St. Augustine", "atlantic",
+park("anastasia", "Anastasia State Park", "Anastasia: Guards in Summer", "atlantic", "st-johns", "St. Johns County", "St. Augustine", "atlantic",
      dogs="no", shell="yes", chair="yes", mat="yes", guard="seasonal", restroom="yes", kids=True,
-     parking="The page says there are 350 spaces, parking is included with admission, and the lot tends to fill on busy weekends and holidays. It suggests returning an hour or two later. It does not give a clock time.",
-     fills="Busy weekends and holidays, with no clock time. The page suggests trying again later.",
-     dogs_note="The page says pets are prohibited from the beach.",
-     shell_note="The page says beachcombing is a favorite and names clam, scallop, oyster and olive shells. It says most of what you find was or could still be alive.",
-     chair_note="Beach wheelchairs are free. Ask at the Island Beach Shop and Grill or at Anastasia Watersports.",
-     mat_note="The page says a mat allows access to the beach, along with elevated boardwalks.",
-     guard_note="A designated swimming area behind the beach shop is monitored by a lifeguard from Memorial Day through Labor Day. The page says to be careful whether or not a lifeguard is present.",
-     rest_note="The day use area has three restrooms. Beach and Salt Run restrooms have outdoor showers. A playground is in the beach access area.",
-     angle="Anastasia is the St. Augustine state park with four miles of beach, a seasonal lifeguard window, a mat, and shelling the page describes.",
-     who="It suits a summer swim in the designated area, a shell walk, and a visitor who needs a mat or a chair. Outside Memorial Day to Labor Day the page does not promise a lifeguard.",
-     sources=[fsp("anastasia-state-park", "Anastasia")], nearby=["north-peninsula", "little-talbot"])
+     parking="The hours page says the park is open 8 a.m. until sundown, 365 days a year. Admission is 8 dollars per vehicle for up to eight people, 4 dollars for a single occupant vehicle, and 2 dollars for a pedestrian, a bicyclist, or an extra passenger. The experiences page says there are 350 spaces, parking is included with admission, overnight parking is not permitted, and the lot tends to fill on busy weekends and holidays. It suggests returning an hour or two later. It does not give a clock time.",
+     fills="Busy weekends and holidays, with no clock time. The experiences page suggests trying again an hour or two later. Overnight parking is not permitted.",
+     dogs_note="The experiences page says pets are prohibited from the beach. The accessible amenities section says service animals are welcome in all areas of Florida State Parks.",
+     shell_note="The page says beachcombing is a favorite and names clam, scallop, oyster and olive shells. It says to plan around low tide, and that most of what you find was or could still be alive.",
+     chair_note="Beach wheelchairs are free. Ask at the Island Beach Shop and Grill or at Anastasia Water Sports.",
+     mat_note="The accessible list names a Mobi-Mat to the beach, plus elevated boardwalks. It does not state the mat length.",
+     guard_note="A designated swimming area at the beach access ramp behind Island Beach Shop and Grill is monitored by a lifeguard from Memorial Day through Labor Day. The page says swimmers should exercise caution whether or not a lifeguard is present.",
+     rest_note="The day use area has three restrooms. Beach and Salt Run restrooms have outdoor showers. One playground is in the beach access area. Two more accessible playgrounds are in the campground loops.",
+     angle="Anastasia State Park has four miles of beach, a fee that covers 350 spaces, a Mobi-Mat, and lifeguards only from Memorial Day through Labor Day.",
+     who="It suits a summer swim in the designated area behind the beach shop, a low tide shell walk, and a visitor who needs the mat or a free chair. Outside that window the page does not promise a lifeguard. Overnight parking is not allowed.",
+     sources=[
+         fsp("anastasia-state-park", "Anastasia"),
+         ("Florida State Parks: Anastasia hours and fees", "https://www.floridastateparks.org/Anastasia/hours-fees"),
+     ],
+     nearby=["north-peninsula", "little-talbot"],
+     verified="2026-11-20", modified="2026-11-20",
+     extra_html=[
+         '<p>Rechecked 20 Nov 2026 against the experiences page and the hours and fees page. The new planning facts are the dollar amounts, the 8 a.m. to sundown day, and the ban on overnight parking. The 350 spaces and the weekend fill note were already on the experiences page. The page still does not name a clock time for when the lot fills.</p>',
+         '<p>The beach is open to bicycles and people on foot. Motorized vehicles are not allowed, and visitors may not enter the dunes. Shelling is tied to low tide. The park says it hosts some of the better surfing on the east coast of Florida and tells swimmers to heed posted warnings, including rip currents. We do not post today\'s flag or this week\'s water. Use the <a href="/guides/red-tide/">red tide guide</a> for where current samples live.</p>',
+         '<p><a href="/beaches/north-peninsula/">North Peninsula</a> is the next state park north in this guide, with shelling and a page that says there is no lifeguard on duty. <a href="/beaches/little-talbot/">Little Talbot Island</a> lists two beach wheelchairs and no lifeguards. Anastasia is the one with the summer guard window and a stated day use fee.</p>',
+     ],
+     reads={
+         "mid": [
+             ("/beaches/north-peninsula/", "North Peninsula State Park", "Shelling and surfing, and a page that says no lifeguard is on duty."),
+             ("/beaches/little-talbot/", "Little Talbot Island", "Two beach wheelchairs, shelling, and no lifeguards."),
+             ("/guides/best-for-accessibility/", "Beaches with a wheelchair or mat", "Anastasia names a Mobi-Mat. Siesta is the page that states a length."),
+         ],
+         "end": [
+             ("/guides/best-shelling/", "Beaches where shelling is described", "Anastasia is listed because the park names the shells."),
+             ("/guides/best-for-kids/", "Beaches that suit kids", "A beach playground here, and a lifeguard only in the summer window."),
+             ("/guides/red-tide/", "Red tide history and where to check", "Atlantic water is not automatically clear. We do not post a count."),
+             ("/regions/atlantic/", "Atlantic Coast beaches", "The east facing set, from Nassau to Miami-Dade."),
+         ],
+         "compare": '<p><a href="/beaches/north-peninsula/">North Peninsula</a> states there is no lifeguard. <a href="/beaches/little-talbot/">Little Talbot</a> lists two beach wheelchairs and no lifeguards. Anastasia is the summer guard window, the Mobi-Mat, and the day use fee on 350 spaces. Overnight parking is not allowed.</p>',
+     },
+     faqs=[
+         ("Can I bring a dog to Anastasia State Park?", "The experiences page says pets are prohibited from the beach. It also says service animals are welcome in all areas of Florida State Parks."),
+         ("Are there lifeguards at Anastasia State Park?", "A designated swim at the ramp behind Island Beach Shop and Grill is monitored from Memorial Day through Labor Day. The page says to exercise caution whether or not a lifeguard is present. Outside that window the page does not promise a lifeguard."),
+         ("What does parking cost at Anastasia?", "The hours page checked 20 Nov 2026 lists 8 dollars per vehicle for up to eight people, 4 dollars for a single occupant vehicle, and 2 dollars for a pedestrian, a bicyclist, or an extra passenger. The experiences page says that fee covers 350 spaces and that overnight parking is not permitted."),
+         ("Is there a beach wheelchair or a mat?", "Beach wheelchairs are free at the Island Beach Shop and Grill or Anastasia Water Sports. The accessible list names a Mobi-Mat and elevated boardwalks. It does not state the mat length."),
+     ])
 
 park("north-peninsula", "North Peninsula State Park", "North Peninsula", "atlantic", "st-johns", "St. Johns County", "Flagler Beach", "atlantic",
      dogs="no", shell="yes", chair="unstated", mat="unstated", guard="no", restroom="yes",

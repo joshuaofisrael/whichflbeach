@@ -3,7 +3,7 @@
 
 REGIONS = {
     "gulf": {"name": "Gulf Coast", "blurb": "Sarasota, the islands north of it, Charlotte, Lee and Collier.",
-             "intro": "Gulf Coast pages run from Pasco and Pinellas through Sarasota to Collier. The open water is to the west."},
+             "intro": "Gulf beaches from Pasco to Collier, chosen by parking, dogs, and lifeguards. Sunset direction is a separate guide."},
     "atlantic": {"name": "Atlantic Coast", "blurb": "From Nassau and Duval down the east coast to Miami-Dade.",
                  "intro": "Atlantic pages face east. Surf, inlets and sunrise light are the usual story, and red tide can still arrive by current."},
     "panhandle": {"name": "Panhandle", "blurb": "Franklin, Bay, Walton, Okaloosa and Escambia state park beaches.",
@@ -132,10 +132,50 @@ srq("manasota-beach", "Manasota Beach", "Manasota Beach", "Englewood", "yes", "y
     "It suits a guarded swim at the south end of the county, especially if you are also launching a boat.",
     ["blind-pass", "caspersen-beach"], kids=True)
 
-srq("caspersen-beach", "Caspersen Beach", "Caspersen Beach", "Venice", "unstated", "unstated", "unstated", SRQ_DOG_QUIET, SRQ_PARK, NOFILL,
-    "Caspersen Beach is the park the county introduction calls a secluded offering. The directory lists swimming, fishing, a kayak launch, fitness equipment and an unpaved trail, and it does not list a lifeguard or a restroom.",
-    "It suits someone who wants a quieter county listing than Siesta or Venice Beach and does not need a lifeguard on the published amenity list.",
-    ["venice-beach", "service-club", "blind-pass"])
+add(slug="caspersen-beach", name="Caspersen Beach", short="Caspersen: Walk In, Lot Closed", region="gulf", county="sarasota",
+    county_name="Sarasota County", place="Venice", manager="Sarasota County Parks", water="gulf",
+    dogs="unstated", shell="unstated", chair="unstated", mat="unstated", guard="unstated", restroom="unstated",
+    kids=False, sunset=False,
+    parking="The facility page says the Harbor Drive access washed out during the 2024 storm season. Vehicle parking is closed. The park is open to people on foot and on bicycles. The county says to enter from South Brohard Park or from the Venetian Waterway Park Trail at the City of Venice Festival Grounds. It does not state a fee, because there is no vehicle lot open to charge.",
+    fills="There is no vehicle lot open on the facility page, so a fill time for Caspersen itself does not apply. The page does not say when South Brohard fills.",
+    dogs_note="The facility page amenity list does not mark Caspersen dog friendly, and it does not say pets are prohibited. Confirm the county dog page before you bring a pet.",
+    shell_note="The facility page does not describe shelling or fossil teeth. This guide does not add either from a tourism writeup.",
+    chair_note=NOCHAIR, mat_note=NOMAT,
+    guard_note="Lifeguard is not in the amenity list on the facility page. Treat the water as unguarded unless a sign on site says otherwise.",
+    rest_note="The facility page says the restrooms are closed until repairs, along with vehicle parking and the playground. Hours on that page are 6 a.m. to 10 p.m.",
+    angle="Caspersen Beach is open on foot and by bicycle. The county says the vehicle lot, restrooms, and playground have been closed since the 2024 storm washout.",
+    who="It suits a walk or a bike ride in from South Brohard when you do not need a restroom, a playground, or a lifeguard on the Caspersen list. It does not suit a car.",
+    sources=[
+        ("Sarasota County: Caspersen Beach Park", "https://www.sarasotacountyparks.com/Home/Components/FacilityDirectory/FacilityDirectory/603/6738"),
+        SRQ, SRQH,
+    ],
+    nearby=["venice-beach", "service-club", "blind-pass", "south-brohard"],
+    verified="2026-11-20", modified="2026-11-20",
+    extra_html=[
+        '<p>The practical change is the entrance, not a new amenity list. On 20 Nov 2026 the county facility page still listed beach access, bicycling, birding, a canoe or kayak launch, fishing, grills, outdoor fitness equipment, picnicking, swimming, an unpaved trail, and wildlife viewing. In the same paragraph it said the Harbor Drive access washed out during the 2024 storm season and that restrooms, vehicle parking, and the playground stay closed until repairs. Entry is from <a href="/beaches/south-brohard/">South Brohard Park</a> or the Venetian Waterway Park Trail at the City of Venice Festival Grounds. We do not print the street address or a phone number. Use the county link.</p>',
+        '<p>South Brohard is the car access the county names. Its directory line still lists a restroom. Caspersen\'s own restroom is the one the facility page says is closed. <a href="/beaches/venice-beach/">Venice Beach</a> is the nearby listing that includes a lifeguard. <a href="/beaches/service-club/">Service Club Park</a> is the picnic and volleyball listing, also without a lifeguard in the directory. None of those pages is a promise about the water.</p>',
+        '<p>People ask Caspersen about fossil teeth. The facility page we checked does not mention teeth or shells, so this page does not either. If a later county page adds that, the shelling guide is where it would belong. The <a href="/counties/sarasota/">Sarasota County</a> hub is the rest of the directory.</p>',
+    ],
+    reads={
+        "mid": [
+            ("/beaches/south-brohard/", "South Brohard Park", "The county says to enter Caspersen from here. The directory still lists a restroom."),
+            ("/beaches/venice-beach/", "Venice Beach", "The nearby county beach whose directory lists a lifeguard."),
+            ("/beaches/service-club/", "Service Club Park", "Picnic and volleyball in Venice, with no lifeguard in the list."),
+        ],
+        "end": [
+            ("/counties/sarasota/", "Sarasota County beaches", "The rest of the county directory, including Siesta."),
+            ("/beaches/siesta-beach/", "Siesta Beach", "The large free lot if the day depends on parking."),
+            ("/guides/how-to-pick-a-florida-beach/", "How to pick a Florida beach", "A closed lot is the constraint. Start there."),
+            ("/regions/gulf/", "Gulf Coast beaches", "The county map, not a sunset ranking."),
+        ],
+        "compare": '<p>Need a car and a restroom? Start at <a href="/beaches/south-brohard/">South Brohard</a>, which is the access the county names, and whose directory still lists a restroom. Need a lifeguard on the published list? <a href="/beaches/venice-beach/">Venice Beach</a> has one. Caspersen is the walk-in shore with the lot, the restrooms, and the playground closed.</p>',
+    },
+    faqs=[
+        ("Can I park a car at Caspersen Beach?", "Not on the facility page checked 20 Nov 2026. Vehicle parking is closed. The county says to enter on foot or by bicycle from South Brohard Park or the Venetian Waterway Park Trail."),
+        ("Are the Caspersen restrooms and playground open?", "The same page says restrooms, vehicle parking, and the playground are closed until repairs. Hours printed there are 6 a.m. to 10 p.m."),
+        ("Is there a lifeguard at Caspersen Beach?", "Lifeguard is not in the amenity list. Treat the water as unguarded unless a sign on site says otherwise."),
+        ("Does the county page mention shark teeth at Caspersen?", "No. The facility page does not mention fossil teeth or shelling. This guide does not add that from a tourism site."),
+    ])
 
 srq("blind-pass", "Blind Pass Beach", "Blind Pass Beach", "Englewood", "yes", "unstated", "unstated", SRQ_DOG_QUIET, SRQ_PARK, NOFILL,
     "Blind Pass Beach is a county park on Manasota Key with restrooms, swimming, fishing, a kayak launch and picnic shelters. A lifeguard is not in the list.",

@@ -2,7 +2,6 @@
 # set to noindex,follow and kept out of the sitemap for AdSense low-value-content review (20 Nov 2026).
 # Remove a path from this list once the page has real, unique substance.
 beaches/blind-pass
-beaches/caspersen-beach
 beaches/lido-beach
 beaches/manasota-beach
 beaches/nokomis-beach
