@@ -147,7 +147,6 @@ HUB_DATES = {
     "/counties/sarasota/": (None, "2026-11-20"),
     "/counties/st-johns/": (None, "2026-11-20"),
     "/about/": (None, "2026-11-19"),
-    "/": (None, "2026-11-19"),
     "/guides/best-for-dogs/": (None, "2026-11-19"),
     "/guides/best-for-accessibility/": (None, "2026-11-20"),
     "/guides/best-for-kids/": (None, "2026-11-20"),
@@ -155,6 +154,8 @@ HUB_DATES = {
     "/guides/best-shelling/": (None, "2026-11-20"),
     "/guides/how-to-pick-a-florida-beach/": (None, "2026-11-20"),
     "/guides/red-tide/": (None, "2026-11-20"),
+    "/guides/beach-flag-colors/": ("2026-11-20", "2026-11-20"),
+    "/": (None, "2026-11-20"),
     "/privacy/": (None, "2026-11-19"),
     "/ad-disclosure/": (None, "2026-11-19"),
     "/image-policy/": (None, "2026-11-19"),
@@ -289,6 +290,18 @@ def compare_box(heading, lines_html):
         '<aside class="compare" aria-labelledby="compare-h">'
         '<h2 id="compare-h">%s</h2>%s</aside>'
     ) % (E(heading), lines_html)
+
+def news_thumb(rel, alt, scene):
+    """One news-style thumbnail. Insert the file only when it is actually in the repo."""
+    fp = os.path.join(ROOT, rel)
+    if os.path.isfile(fp):
+        return (
+            '<figure class="article-thumb"><a href="/image-policy/">'
+            '<img src="/%s" alt="%s" width="1200" height="675">'
+            '</a><figcaption><a href="/image-policy/">AI generated image</a>. '
+            'Not a photograph of a named beach.</figcaption></figure>'
+        ) % (rel, E(alt))
+    return "<!-- needs image: /%s | scene: %s -->" % (rel, scene)
 
 def pack_reads(mid, end, compare_html, compare_title="Check another beach"):
     return (
@@ -573,7 +586,7 @@ def guides():
 <h2>1. Parking and arrival</h2><p>Read whether the lot is free, metered, or covered by a park entrance fee, and whether the agency says the lot fills. If the page does not give a clock time, we do not invent one. Have a second beach in the same county.</p>
 <h2>2. Dogs, kids, and step free access</h2><p>Dog rules change at the county line. A beach wheelchair or an access mat is listed only when the park page says so. Lifeguard coverage is listed only when the page says who is on duty, and for which hours.</p>
 <h2>3. Shells</h2><p>Empty shells and live animals are different things. Read the <a href="/guides/best-shelling/">shelling guide</a> and the FWC page before you pocket anything.</p>
-<h2>4. The day you go</h2><p>Red tide and bacteria are not facts we freeze on a page. Use the <a href="/guides/red-tide/">red tide guide</a> and the health department map that morning.</p>
+<h2>4. The day you go</h2><p>Red tide and bacteria are not facts we freeze on a page. Use the <a href="/guides/red-tide/">red tide guide</a> and the health department map that morning. Beach warning flags are a different sign. The <a href="/guides/beach-flag-colors/">flag color guide</a> explains the state system and does not post today's color.</p>
 <h2>Start here</h2><ul class="cols"><li><a href="/">Homepage picker</a></li><li><a href="/regions/gulf/">Gulf Coast</a></li><li><a href="/regions/atlantic/">Atlantic Coast</a></li><li><a href="/regions/panhandle/">Panhandle</a></li><li><a href="/regions/keys/">Florida Keys</a></li><li><a href="/counties/sarasota/">Sarasota County</a></li></ul>''' + pack_reads(
               [
                   ("/beaches/siesta-beach/", "Siesta Beach", "A large free lot, a published lifeguard window, and no pet dogs."),
@@ -769,6 +782,73 @@ def guides():
           ],
           verified_h=RUN_H, published=PUBLISHED, modified=RUN)
 
+    flag_thumb = news_thumb(
+        "assets/images/guides/beach-warning-flag.png",
+        "Beach warning flags on a shoreline pole",
+        "beach warning flags on a pole at a Florida shoreline, natural daylight, camera look, no faces, no logos, no readable text",
+    )
+    guide("/guides/beach-flag-colors/", "What Florida Beach Flag Colors Mean | %s" % BRAND,
+          "What do Florida beach warning flags mean?",
+          "Green, yellow, red, double red, and purple, from the DEP sign, statute 380.276, and USLA. Not a live condition.",
+          flag_thumb + '''<div class="answer"><p><strong>Five signals, and not today's color.</strong> Florida public beaches that fly warning flags are supposed to use the set developed by the Department of Environmental Protection. The sign file names the hazards. County and park pages name the colors. This guide does not say which flag is flying this afternoon.</p></div>
+<p>Checked 20 Nov 2026. <a href="https://www.flsenate.gov/Laws/Statutes/2026/380.276">Section 380.276</a> puts the uniform flag program under DEP, through the Florida Coastal Management Program. A public beach that displays warning flags is limited to the flags the department developed, unless the statute's later subsection allows an extra device. The program is open to any coastal government, with or without lifeguards. The <a href="https://floridadep.gov/rcp/fcmp/content/beach-warning-flag-program">DEP program page</a> says the 2005 amendment is what required that standardization, after a 2002 law that only called for a uniform beach safety program. The same page says DEP built the flags with the Florida Beach Patrol Chiefs Association, the United States Lifesaving Association, and the International Life Saving Federation.</p>
+<h2>The sign says the hazard. The color name is on the county page.</h2>
+<p>The <a href="https://floridadep.gov/sites/default/files/2019%20Beach%20Warning%20Flag%20Sign%20-PDF-ColorLogo_0.pdf">DEP sign file</a> prints five rows and does not, in the text of that file, print the words green, yellow, red, or purple. The rows are: water closed to the public; high hazard, high surf and/or strong currents; medium hazard, moderate surf and/or currents; low hazard, calm conditions, exercise caution; and stinging marine life, naming man of war, jellyfish, and stingrays. The last line says a pole with no flag is not a clearance to enter.</p>
+<p>The program page says the system uses flags in four colors. Double red is two flags of the red color, so four colors can be five signals. Counties spell the colors out:</p>
+<div class="tablewrap"><table class="stats">
+<thead><tr><th scope="col">Color, as counties name it</th><th scope="col">What the pages agree on</th><th scope="col">Where they do not</th></tr></thead>
+<tbody>
+<tr><th scope="row">Green</th><td>Low hazard. <a href="https://www.volusia.org/services/public-protection/beach-safety/beach-warning-flags.stml">Volusia County</a> says calm conditions, exercise caution. <a href="https://www.swfd.org/beach-safety/surf-conditions">South Walton Fire District</a> uses the same pair of words. <a href="https://www.fortlauderdale.gov/Government/Departments/Fire-Rescue/Organization/Ocean-Rescue">Fort Lauderdale Ocean Rescue</a> says conditions are calm and normal care is enough.</td><td><a href="https://www.usla.org/page/beach-warning-flags">USLA</a> does not list a green flag. It says the international guidelines left green out, because a flag should mark unusually challenging conditions rather than suggest the water is ever free of hazard. Volusia's explainer still says the program uses colors adopted by the International Lifesaving Federation. Those two official pages disagree. The statute points a Florida beach to DEP's flags, which include the low hazard row.</td></tr>
+<tr><th scope="row">Yellow</th><td>Medium hazard. Moderate surf and/or currents. Volusia, South Walton, and Fort Lauderdale all say extra care.</td><td>USLA adds that weak swimmers are discouraged from entering. That sentence is USLA's, not the DEP sign's.</td></tr>
+<tr><th scope="row">Red</th><td>High hazard. High surf and/or strong currents.</td><td>Fort Lauderdale says swimmers are strongly discouraged. USLA says all swimmers are discouraged and anyone who enters should take great care. The DEP sign stops at the hazard description.</td></tr>
+<tr><th scope="row">Double red</th><td>The water is closed to the public. Volusia and South Walton say that in those words. The DEP sign's first row is "water closed to the public."</td><td>Fort Lauderdale also lists water pollution, the threat of lightning, or predatory fish as reasons that city may close the water or the beach. That list is on the city page. It is not in the statute and it is not on the DEP sign.</td></tr>
+<tr><th scope="row">Purple</th><td>Marine life that can sting. The DEP sign names man of war, jellyfish, and stingrays. Volusia says dangerous marine life. South Walton says marine pests and says purple can fly with another flag. Fort Lauderdale names jellyfish, man of war, and sea lice, and also says purple may fly beside another flag.</td><td>USLA says purple is for marine pests that can cause minor injuries, and that the flag is not meant to indicate sharks. Do not read a purple flag as a shark warning. Do not read the absence of purple as an all clear on marine life.</td></tr>
+</tbody></table></div>
+<h2>A flag is not a rip current forecast, and it is not a lifeguard</h2>
+<p>DEP says the flags are a general warning about surf conditions. They do not specifically tell you a rip current is present. Since 2004 the coastal program has also handed out separate rip current signs developed with the National Weather Service, Sea Grant, and USLA. Read that poster if it is on the walkway. It is a different object from the flag.</p>
+<p>USLA says its flag set is approved only on beaches where lifeguards trained to USLA standards are on duty, and that a flag is a tool for those lifeguards, not a substitute for them. Florida's statute is wider: a beach with no lifeguards can still join the flag program. A flag on an unguarded shore does not create a lifeguard. The lifeguard fact, if any, is whatever that park or county page prints. This site does not call a beach clear to enter.</p>
+<p>The flags measure 29.25 inches high by 39 inches wide. The signs are 30 by 36 inches. DEP provides flags and signs to local governments when funds allow. The city or county that takes them has to put them up and keep them up.</p>
+<h2>Which beaches in this guide actually post them</h2>
+<p>Volusia prints the five colors and the missing flag warning. Volusia is not one of the counties in this beach guide. It is here because the color names are clearer there than on the DEP sign file.</p>
+<p>South Walton Fire District says this is the system on the beaches of South Walton, about 26 miles, with the color chosen from the most dangerous surf on that stretch and then flown at each access. The water in front of you can look calmer than the flag. The district posts a current color on its own page. This guide does not copy that color. Our Walton pages are state parks: <a href="/beaches/grayton-beach/">Grayton Beach</a>, <a href="/beaches/topsail-hill/">Topsail Hill</a>, and <a href="/beaches/deer-lake/">Deer Lake</a>. Those park pages do not print the five colors. Read the flag at the access, then the district page, and do not assume a state park tower and a fire district tower are the same schedule.</p>
+<p>Fort Lauderdale Ocean Rescue describes about three miles of city beach and 20 towers, from the South Beach picnic area north to Hugh Taylor Birch State Park. The city prints spring and summer hours of 9:45 a.m. to 7 p.m., and fall and winter hours of 9:15 a.m. to 6 p.m. Naming the state park as the north end of that run is not the same thing as saying the park's own shore is on the city schedule. Use the city page for the towers and <a href="/beaches/hugh-taylor-birch/">Hugh Taylor Birch</a> for the state park.</p>
+<p><a href="/beaches/henderson-beach/">Henderson Beach State Park</a> was rechecked the same day. The swimming section lists double red, red, yellow, green, and purple, and tells you to read the signs at the welcome stations and on the beach. The beach section of that same page, in the copy we read, skips the red row. Use the sign at the lot, not a memory of either list. The page does not say a lifeguard is on duty. Its green line goes further than the DEP sign. We do not repeat that line.</p>
+<p><a href="/beaches/delnor-wiggins/">Delnor-Wiggins</a> uses the colors two ways. Warning flag signs are posted at each parking area entrance and on the beach, and the page says lifeguards are not provided. Separately, swimming stops at the double red flags at the northern end of parking area four because of currents in Wiggins Pass. That double red is a boundary written into the park text, not a color we update.</p>
+<p><a href="/beaches/anastasia/">Anastasia</a> tells swimmers to heed posted warnings, including rip currents, and the experiences page does not print the five colors. Lifeguards there are a summer window, Memorial Day through Labor Day, at one designated ramp. A flag, if one is flying, is still not that staffing fact.</p>
+''' + pack_reads(
+              [
+                  ("/beaches/henderson-beach/", "Henderson Beach", "Prints the five colors. Does not say a lifeguard is on duty."),
+                  ("/beaches/anastasia/", "Anastasia State Park", "Heed posted warnings. Does not print the five colors. Guards in summer only."),
+                  ("/beaches/delnor-wiggins/", "Delnor-Wiggins Pass", "Daily flag signs, plus double red as the line at the pass."),
+              ],
+              [
+                  ("/guides/red-tide/", "Red tide history and where to check", "A flag is not a bacteria or red tide report."),
+                  ("/guides/how-to-pick-a-florida-beach/", "How to pick a Florida beach", "A flag color does not fix parking, dogs, or a closed lot."),
+                  ("/beaches/hugh-taylor-birch/", "Hugh Taylor Birch State Park", "The city names this park as the north end of its ocean rescue run."),
+                  ("/regions/panhandle/", "Panhandle beaches", "Grayton, Topsail Hill, and Deer Lake sit in the South Walton stretch."),
+              ],
+              '<p>Three different jobs. <a href="/beaches/henderson-beach/">Henderson</a> prints the colors and does not promise a lifeguard. <a href="/beaches/anastasia/">Anastasia</a> has a summer guard window and does not print the colors. <a href="/beaches/delnor-wiggins/">Delnor-Wiggins</a> says lifeguards are not provided and uses double red as a standing boundary at the pass.</p>'
+              '<p>For the coast map, open <a href="/regions/panhandle/">the Panhandle</a> or <a href="/regions/atlantic/">the Atlantic</a>. Neither page posts today\'s flag.</p>',
+              "Check another beach",
+          ),
+          [("What does a double red flag mean?", "The DEP sign says the water is closed to the public. Volusia and South Walton use two red flags for that row. Fort Lauderdale's page also lists pollution, lightning, and predatory fish as reasons that city may close the water. That extra list is the city's, not the statute."),
+           ("Does green mean the water is clear to enter?", "No. The DEP low hazard row says calm conditions, exercise caution, and the sign says a missing flag is not a clearance. USLA's international set does not include green. Do not treat a green flag as permission."),
+           ("Does purple mean sharks?", "USLA says purple is for marine pests such as jellyfish or stingrays and is not meant to indicate sharks. The DEP sign names man of war, jellyfish, and stingrays."),
+           ("Are the flags a rip current warning?", "DEP says no. They are a general surf warning. Rip current signs are a separate poster.")],
+          [
+              ("Florida Statutes section 380.276 (2026)", "https://www.flsenate.gov/Laws/Statutes/2026/380.276"),
+              ("Florida DEP: Beach Warning Flag Program", "https://floridadep.gov/rcp/fcmp/content/beach-warning-flag-program"),
+              ("Florida DEP: beach warning flag sign (PDF)", "https://floridadep.gov/sites/default/files/2019%20Beach%20Warning%20Flag%20Sign%20-PDF-ColorLogo_0.pdf"),
+              ("United States Lifesaving Association: beach warning flags", "https://www.usla.org/page/beach-warning-flags"),
+              ("Volusia County: beach warning flags", "https://www.volusia.org/services/public-protection/beach-safety/beach-warning-flags.stml"),
+              ("South Walton Fire District: surf conditions and flag meanings", "https://www.swfd.org/beach-safety/surf-conditions"),
+              ("Fort Lauderdale Ocean Rescue", "https://www.fortlauderdale.gov/Government/Departments/Fire-Rescue/Organization/Ocean-Rescue"),
+              fsp("henderson-beach-state-park", "Henderson Beach"),
+              fsp("delnor-wiggins-pass-state-park", "Delnor-Wiggins Pass"),
+              fsp("anastasia-state-park", "Anastasia"),
+          ],
+          verified_h=RUN_H, published=RUN, modified=RUN)
+
 def home():
     regions = "".join('<li class="card"><h3><a href="/regions/%s/">%s</a></h3><p>%s</p></li>' % (k, E(R["name"]), E(R["blurb"])) for k, R in REGIONS.items())
     counties = "".join('<li><a href="/counties/%s/">%s</a></li>' % (k, E(n)) for k, n in sorted(COUNTIES.items(), key=lambda kv: kv[1]) if any(b["county"] == k for b in BEACHES))
@@ -805,6 +885,7 @@ def home():
 <li><a href="/guides/best-for-kids/">Kids</a></li>
 <li><a href="/guides/best-for-accessibility/">Wheelchairs and mats</a></li>
 <li><a href="/guides/best-for-sunsets/">Sunset direction</a></li>
+<li><a href="/guides/beach-flag-colors/">Beach flag colors</a></li>
 </ul>
 <h2>Counties</h2><ul class="cols">{counties}</ul>
 <h2>Siesta Key and Sarasota</h2><p>Sarasota County is covered beach by beach, including Siesta Key accesses that differ on dogs, parking, and lifeguards.</p><ul class="cols">{sarasota}</ul>
@@ -938,6 +1019,7 @@ def extras():
              "- [Kids](%s)" % url("/guides/best-for-kids/"),
              "- [Wheelchairs and mats](%s)" % url("/guides/best-for-accessibility/"),
              "- [Sunset direction](%s)" % url("/guides/best-for-sunsets/"),
+             "- [Beach warning flag colors](%s)" % url("/guides/beach-flag-colors/"),
              "- [Sources and methods](%s)" % url("/methodology/"),
              "", "## Regions"]
     for k, R in REGIONS.items():
