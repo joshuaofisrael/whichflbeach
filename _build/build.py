@@ -12,7 +12,7 @@ Set GA4_ID before launch. See LAUNCH-NOTES.md.
 """
 import os, sys, json, html, re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from beaches import BEACHES, REGIONS, COUNTIES
+from beaches import BEACHES, REGIONS, COUNTIES, fsp
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # SINGLE FLAG. Leave this False until whichflbeach.com resolves and you are ready to index.
 LAUNCH = "--launch" in sys.argv
@@ -127,27 +127,34 @@ def human_date(iso):
 # PUBLISHED lastmod untouched -- no manufactured freshness across the rest of the site.
 TODAY = "2026-11-19"
 TODAY_H = "19 Nov 2026"
+# 20 Nov 2026 recheck. Do not point the 19 Nov dog guide at this date.
+RUN = "2026-11-20"
+RUN_H = "20 Nov 2026"
 # Explicit lastmod (and first-publish when the second value is set) for hubs that changed
 # after the site-wide PUBLISHED date. Unlisted hubs keep PUBLISHED.
 HUB_DATES = {
     # First published 18 Nov
     "/counties/nassau/": ("2026-11-18", "2026-11-18"),
-    # Material hub edits 18 Nov (new Atlantic beaches)
+    # Material hub edits 18 Nov (new Atlantic beaches). Atlantic and shelling were edited again 20 Nov.
     "/counties/duval/": (None, "2026-11-18"),
-    "/regions/atlantic/": (None, "2026-11-18"),
-    "/guides/best-shelling/": (None, "2026-11-18"),
     # Material edits 19 Nov (dogs refresh, AdSense/privacy, Siesta and Fort De Soto fact updates)
-    "/beaches/": (None, "2026-11-19"),
+    # Beach index, Gulf, Atlantic, Sarasota, and St. Johns cards changed again on 20 Nov.
+    "/beaches/": (None, "2026-11-20"),
     "/regions/": (None, "2026-11-19"),
-    "/regions/gulf/": (None, "2026-11-19"),
+    "/regions/gulf/": (None, "2026-11-20"),
+    "/regions/atlantic/": (None, "2026-11-20"),
     "/counties/pinellas/": (None, "2026-11-19"),
-    "/counties/sarasota/": (None, "2026-11-19"),
+    "/counties/sarasota/": (None, "2026-11-20"),
+    "/counties/st-johns/": (None, "2026-11-20"),
     "/about/": (None, "2026-11-19"),
     "/": (None, "2026-11-19"),
     "/guides/best-for-dogs/": (None, "2026-11-19"),
-    "/guides/best-for-accessibility/": (None, "2026-11-19"),
-    "/guides/best-for-kids/": (None, "2026-11-19"),
-    "/guides/best-for-sunsets/": (None, "2026-11-19"),
+    "/guides/best-for-accessibility/": (None, "2026-11-20"),
+    "/guides/best-for-kids/": (None, "2026-11-20"),
+    "/guides/best-for-sunsets/": (None, "2026-11-20"),
+    "/guides/best-shelling/": (None, "2026-11-20"),
+    "/guides/how-to-pick-a-florida-beach/": (None, "2026-11-20"),
+    "/guides/red-tide/": (None, "2026-11-20"),
     "/privacy/": (None, "2026-11-19"),
     "/ad-disclosure/": (None, "2026-11-19"),
     "/image-policy/": (None, "2026-11-19"),
@@ -255,7 +262,7 @@ def faq_html(faqs):
     return '<section class="faq" aria-labelledby="faq-h"><h2 id="faq-h">Questions people ask</h2>' + "".join(
         "<details><summary>%s</summary><p>%s</p></details>" % (E(q), E(a)) for q, a in faqs) + "</section>"
 
-def next_reads(items, heading="Related reads"):
+def next_reads(items, heading="Related reads", heading_id="next-h"):
     """items: list of (href, title, blurb). Thumbnails use the site graphic until a news photo exists for that page."""
     lis = []
     for href, title, blurb in items:
@@ -270,18 +277,25 @@ def next_reads(items, heading="Related reads"):
             '</div></li>' % (href, E(title), E(blurb))
         )
     return (
-        '<section class="nextreads" aria-labelledby="next-h">'
-        '<h2 id="next-h">%s</h2>'
+        '<section class="nextreads" aria-labelledby="%s">'
+        '<h2 id="%s">%s</h2>'
         '<ul class="nextread-list">%s</ul>'
         '<p class="note">Thumbnails use the site social graphic until each guide has its own news photo. '
         '<a href="/image-policy/">Image policy</a>.</p></section>'
-    ) % (E(heading), "".join(lis))
+    ) % (heading_id, heading_id, E(heading), "".join(lis))
 
 def compare_box(heading, lines_html):
     return (
         '<aside class="compare" aria-labelledby="compare-h">'
         '<h2 id="compare-h">%s</h2>%s</aside>'
     ) % (E(heading), lines_html)
+
+def pack_reads(mid, end, compare_html, compare_title="Check another beach"):
+    return (
+        next_reads(mid, "Keep reading", "next-mid")
+        + compare_box(compare_title, compare_html)
+        + next_reads(end, "More to check", "next-end")
+    )
 
 def bpath(b):
     return "/beaches/%s/" % b["slug"]
@@ -369,12 +383,23 @@ def beach_page(b):
     desc = b["angle"]
     faqs = beach_faqs(b)
     paras = "".join("<p>%s</p>" % E(p) for p in [b["angle"]] + b.get("extra", []))
+    paras += "".join(b.get("extra_html") or [])
     # Most beach records share the site-wide PUBLISHED/PUBLISHED_H fact-check date.
     # A record only sets "published" when it was fact-checked on a later date; "modified"
     # covers a later edit (e.g. a new cross-link) without claiming the facts were rechecked.
+    # "verified" is the recheck date for the byline and does not replace datePublished.
     pub = b.get("published", PUBLISHED)
     mod = b.get("modified", pub)
-    verified_h = human_date(pub) if b.get("published") else PUBLISHED_H
+    if b.get("verified"):
+        verified_h = human_date(b["verified"])
+    elif b.get("published"):
+        verified_h = human_date(pub)
+    else:
+        verified_h = PUBLISHED_H
+    reads = b.get("reads") or {}
+    mid_html = ("\n" + next_reads(reads["mid"], "Keep reading", "next-mid")) if reads.get("mid") else ""
+    end_html = ("\n" + next_reads(reads["end"], "More to check", "next-end")) if reads.get("end") else ""
+    compare_html = ("\n" + compare_box(reads.get("compare_title") or "Check another beach", reads["compare"])) if reads.get("compare") else ""
     body = f'''<article class="prose wide"><h1>{E(b["name"])}</h1>{byline(verified_h)}
 <p class="sub">{E(b["place"])} · {E(b["county_name"])} · {E(b["manager"])}</p>
 {tags(b)}
@@ -382,11 +407,11 @@ def beach_page(b):
 {paras}
 <h2>What the managing agency publishes</h2>
 {fact_table(b)}
-<p class="note">Fees and hours change. If a dollar amount or a clock time is not in the table, the page we checked did not state it. Confirm on the linked agency page before you go.</p>
+<p class="note">Fees and hours change. If a dollar amount or a clock time is not in the table, the page we checked did not state it. Confirm on the linked agency page before you go.</p>{mid_html}
 {red_blurb(b)}
 <h2>Who it suits</h2>
 <p>{E(b["who"])}</p>
-<p>Our read follows the facts above. It is a planning note, not a rule of the park.</p>
+<p>Our read follows the facts above. It is a planning note, not a rule of the park.</p>{compare_html}{end_html}
 {faq_html(faqs)}
 <section class="sources" aria-labelledby="src-h"><h2 id="src-h">Sources</h2>
 {src_list(b["sources"] + [FWC_FAQ, FWC_STATUS, FWC_SHELLS, FDOH])}
@@ -432,9 +457,39 @@ def region_pages():
         county_html = "<h2>Counties</h2><ul class=\"cols\">" + "".join(
             '<li><a href="/counties/%s/">%s</a></li>' % (k, E(n)) for k, n in counties) + "</ul>"
         path = "/regions/%s/" % key
-        faqs = [("How should I choose a beach in this region?", R["intro"] + " Open a county, then a beach page, for the parking, dog, lifeguard and access facts, then confirm them on the agency link.")]
-        body = '<article class="prose wide"><h1>%s beaches</h1>%s<p class="answer">%s</p>%s<h2>Beaches</h2><ul class="cards">%s</ul><p><a href="/regions/">All regions</a> · <a href="/beaches/">All beaches</a> · <a href="/guides/how-to-pick-a-florida-beach/">How to pick</a></p>%s</article>' % (
-            E(R["name"]), byline(), E(R["intro"]), county_html, "".join(card(b) for b in bs), faq_html(faqs))
+        extra = ""
+        verified = None
+        if key == "gulf":
+            verified = RUN_H
+            faqs = [
+                ("Does every Gulf beach have the sun setting over the water?", "The open water on this coast is to the west, so a clear evening can put the sun over the water. Weather, a dune, or a building can still block it. This page does not rank views. The sunset guide names the few park pages that actually mention sunset."),
+                ("Which Gulf beach should I open first?", "Open the constraint that would ruin the day. A dog points to Fort De Soto in this guide. A guarded swim points to the county pages that list lifeguards, such as Siesta Beach. A closed lot matters more than the coast: Caspersen's vehicle lot was closed on the county facility page checked 20 Nov 2026."),
+            ]
+            extra = '''<p>This page is the county map for the Gulf shores in the guide. It is not a sunset ranking. <a href="/guides/best-for-sunsets/">Where the sun sets over the water</a> answers the direction question and names the three park pages that mention sunset. The beaches below face the same water whether or not their park page says so.</p>
+<p>Dog rules change at the county line. In this guide the Pinellas exception is the designated dog beach at <a href="/beaches/fort-de-soto/">Fort De Soto</a>. Most Gulf state park pages we cite keep pets off the sand. <a href="/beaches/honeymoon-island/">Honeymoon Island</a> is the state park with a named pet beach, separate from the main swim.</p>
+<p>A lifeguard line is whatever that county prints. <a href="/beaches/siesta-beach/">Siesta Beach</a> has a published window on the Sarasota beaches page. <a href="/beaches/caspersen-beach/">Caspersen Beach</a> is the opposite planning problem: on 20 Nov 2026 the <a href="https://www.sarasotacountyparks.com/Home/Components/FacilityDirectory/FacilityDirectory/603/6738" rel="nofollow noopener">county facility page</a> said the Harbor Drive vehicle lot, the restrooms, and the playground were closed after the 2024 storm washout, with entry on foot or by bicycle from South Brohard. That fact is written out on the Caspersen page.</p>
+<p>Boat-only islands are not a backup lot. <a href="/beaches/cayo-costa/">Cayo Costa</a> and <a href="/beaches/don-pedro/">Don Pedro</a> are reached by boat. If the day depends on a car, pick a drive-up beach in the same county before you leave.</p>
+''' + pack_reads(
+                [
+                    ("/guides/best-for-sunsets/", "Where the sun sets over the water", "Direction only, plus the three park pages that mention sunset."),
+                    ("/guides/best-for-dogs/", "Beaches that allow dogs on the sand", "Five published dog rules, including Fort De Soto and Honeymoon Island."),
+                    ("/beaches/caspersen-beach/", "Caspersen Beach", "Vehicle lot, restrooms, and playground closed. Walk or bike in."),
+                    ("/counties/sarasota/", "Sarasota County beaches", "The directory beaches, including Siesta and the Venice shore."),
+                ],
+                [
+                    ("/guides/how-to-pick-a-florida-beach/", "How to pick a Florida beach", "Start with the constraint that would ruin the day."),
+                    ("/guides/best-shelling/", "Beaches where shelling is described", "Only parks whose own page mentions shells."),
+                    ("/beaches/fort-de-soto/", "Fort De Soto Park", "The Pinellas dog beach, plus two swim centers."),
+                    ("/regions/atlantic/", "Atlantic Coast beaches", "The other direction: sunrise over the water, not sunset."),
+                ],
+                '<p>Compare the constraint, not the view. <a href="/beaches/siesta-beach/">Siesta Beach</a> is the large free lot with a published lifeguard window and no pet dogs. <a href="/beaches/fort-de-soto/">Fort De Soto</a> is the Pinellas dog beach. <a href="/beaches/caspersen-beach/">Caspersen</a> is the Venice shore whose vehicle lot the county had closed on 20 Nov 2026.</p>'
+                '<p>Sunset questions belong on <a href="/guides/best-for-sunsets/">the sunset guide</a>.</p>',
+                "Check another Gulf beach",
+            )
+        else:
+            faqs = [("How should I choose a beach in this region?", R["intro"] + " Open a county, then a beach page, for the parking, dog, lifeguard and access facts, then confirm them on the agency link.")]
+        body = '<article class="prose wide"><h1>%s beaches</h1>%s<p class="answer">%s</p>%s%s<h2>Beaches</h2><ul class="cards">%s</ul><p><a href="/regions/">All regions</a> · <a href="/beaches/">All beaches</a> · <a href="/guides/how-to-pick-a-florida-beach/">How to pick</a></p>%s</article>' % (
+            E(R["name"]), byline(verified), E(R["intro"]), extra, county_html, "".join(card(b) for b in bs), faq_html(faqs))
         pub, mod = hub_dates(path)
         ld = [article_ld(R["name"] + " beaches", path, published=pub, modified=mod), faq_ld(faqs)]
         write(path, page(path, "%s Beaches | %s" % (R["name"], BRAND), R["intro"], body, ld,
@@ -507,7 +562,6 @@ def guides():
     dogs = [b for b in BEACHES if b["dogs"] in ("yes", "designated")]
     kids = [b for b in BEACHES if b["kids"]]
     access = [b for b in BEACHES if b["chair"] == "yes" or b["mat"] == "yes"]
-    sunset_named = [b for b in BEACHES if b.get("sunset")]
     gulf = [b for b in BEACHES if b["water"] == "gulf"]
 
     def lst(bs):
@@ -520,7 +574,20 @@ def guides():
 <h2>2. Dogs, kids, and step free access</h2><p>Dog rules change at the county line. A beach wheelchair or an access mat is listed only when the park page says so. Lifeguard coverage is listed only when the page says who is on duty, and for which hours.</p>
 <h2>3. Shells</h2><p>Empty shells and live animals are different things. Read the <a href="/guides/best-shelling/">shelling guide</a> and the FWC page before you pocket anything.</p>
 <h2>4. The day you go</h2><p>Red tide and bacteria are not facts we freeze on a page. Use the <a href="/guides/red-tide/">red tide guide</a> and the health department map that morning.</p>
-<h2>Start here</h2><ul class="cols"><li><a href="/">Homepage picker</a></li><li><a href="/regions/gulf/">Gulf Coast</a></li><li><a href="/regions/atlantic/">Atlantic Coast</a></li><li><a href="/regions/panhandle/">Panhandle</a></li><li><a href="/regions/keys/">Florida Keys</a></li><li><a href="/counties/sarasota/">Sarasota County</a></li></ul>''',
+<h2>Start here</h2><ul class="cols"><li><a href="/">Homepage picker</a></li><li><a href="/regions/gulf/">Gulf Coast</a></li><li><a href="/regions/atlantic/">Atlantic Coast</a></li><li><a href="/regions/panhandle/">Panhandle</a></li><li><a href="/regions/keys/">Florida Keys</a></li><li><a href="/counties/sarasota/">Sarasota County</a></li></ul>''' + pack_reads(
+              [
+                  ("/beaches/siesta-beach/", "Siesta Beach", "A large free lot, a published lifeguard window, and no pet dogs."),
+                  ("/beaches/anastasia/", "Anastasia State Park", "A day use fee, a Mobi-Mat, and lifeguards only in the summer window."),
+                  ("/beaches/caspersen-beach/", "Caspersen Beach", "The vehicle lot was closed on the county page checked 20 Nov 2026."),
+              ],
+              [
+                  ("/guides/best-for-dogs/", "Beaches that allow dogs on the sand", "Only where the managing agency says the sand allows a dog."),
+                  ("/guides/red-tide/", "Red tide history and where to check", "Background plus the live FWC and health department links."),
+                  ("/regions/gulf/", "Gulf Coast beaches", "County by county, not a sunset ranking."),
+                  ("/regions/atlantic/", "Atlantic Coast beaches", "East facing shores, including Anastasia."),
+              ],
+              '<p>Same coast, different day. <a href="/beaches/siesta-beach/">Siesta Beach</a> if you need the free lot and a published guard window. <a href="/beaches/fort-de-soto/">Fort De Soto</a> if the dog is the constraint. <a href="/beaches/anastasia/">Anastasia</a> if you want the Atlantic state park with a summer lifeguard window and a stated day use fee.</p>',
+          ),
           [("What is the best Florida beach?", "There is no single best beach. The useful question is which published constraint matters: a guarded swim, a dog, a beach wheelchair, shells, or a lot that the agency says fills."),
            ("Do you post today's red tide?", "No. FWC posts the current status and a daily sample map. We link those pages and explain how to read them.")],
           [FWC_FAQ, FDOH, FWC_SHELLS])
@@ -537,7 +604,21 @@ def guides():
 <li>Beach conditions reports from Mote Marine Laboratory, which FWC lists as a complement to its own reports.</li>
 <li>The Florida Department of Health beach water map for enterococci, which is a different problem from red tide. The department describes an advisory when a sample over 70 colony forming units per 100 milliliters is confirmed by a resample.</li>
 </ul>
-<p>Gulf beaches in this guide sit on the coast with the long written record. Atlantic and Keys pages explain why a clear headline for the other coast is not enough. County pages sometimes add their own red tide link. Use that too.</p>''',
+<p>Gulf beaches in this guide sit on the coast with the long written record. Atlantic and Keys pages explain why a clear headline for the other coast is not enough. County pages sometimes add their own red tide link. Use that too.</p>''' + pack_reads(
+              [
+                  ("/beaches/anastasia/", "Anastasia State Park", "An Atlantic park. FWC says some Gulf blooms have reached this coast. We still do not post this week's count."),
+                  ("/beaches/siesta-beach/", "Siesta Beach", "A Gulf beach whose county page links out for red tide instead of stating a count."),
+                  ("/guides/how-to-pick-a-florida-beach/", "How to pick a Florida beach", "Parking, dogs, and lifeguards are the planning facts. Conditions are not."),
+              ],
+              [
+                  ("/regions/gulf/", "Gulf Coast beaches", "The coast with the long written red tide record."),
+                  ("/regions/atlantic/", "Atlantic Coast beaches", "Not automatically clear of a bloom the Gulf Stream can carry."),
+                  ("/regions/keys/", "Florida Keys beaches", "Match the sample to the county, not to a statewide headline."),
+                  ("/beaches/", "All beaches", "Each page links the same FWC and health department sources."),
+              ],
+              '<p>Do not compare beaches by a saved cell count. Open <a href="https://myfwc.com/research/redtide/statewide/" rel="nofollow noopener">FWC current status</a> and the <a href="https://www.floridahealth.gov/community-environmental-public-health/environmental-public-health/water-quality/beach-water-quality/" rel="nofollow noopener">health department map</a>, then the beach page for parking and lifeguards. <a href="/beaches/anastasia/">Anastasia</a> and <a href="/beaches/siesta-beach/">Siesta Beach</a> are the two coasts in that pair.</p>',
+              "Check the agency, then a beach",
+          ),
           [("Is the red tide bad at my beach today?", "We do not answer that on this site. Open the FWC status page and the daily sample map, then the health department map."),
            ("When does red tide usually happen?", "FWC says blooms most often form in late summer and early fall and can last into spring. They also occur outside that window."),
            ("Does red tide reach the Atlantic side?", "FWC says some blooms have been carried by the Gulf Stream into the Atlantic, as far as Delaware.")],
@@ -547,7 +628,21 @@ def guides():
           "Florida beaches whose county or state park page mentions shells or beachcombing, plus the FWC rules on empty and live shells.",
           '''<div class="answer"><p><strong>How this list is made.</strong> A beach is here only when the managing agency page mentions shells, shelling, or beachcombing. Famous reputations that the park page does not state are left off.</p></div>
 <p>FWC says you may collect a sea shell depending on whether anything is living in it, what that animal is, and where you are. A recreational saltwater fishing license is required to take a shell that contains a living organism, even from shore. Live oysters and live hard clams follow their own rules and may be taken only from approved harvest areas that are open. In Lee County, FWC says you may not harvest or possess a shell containing a live organism, with stated exceptions for oysters, hard clams, sunray venus clams and coquinas. In Manatee County the limit is two live shells of any single species per day, with the same exceptions, and the count includes sand dollars and starfish. Bahama starfish harvest is prohibited. Live queen conch may not be possessed. An empty queen conch shell has conditions on the FWC page, including no hole of the kind the rule describes. Many state park pages add their own ban on taking live shells. Ask the park if the page is unclear.</p>
-<h2>Beaches</h2>%s''' % lst(shell),
+<p><a href="/beaches/caspersen-beach/">Caspersen Beach</a> is the Venice park people ask about for fossil teeth. The county facility page checked 20 Nov 2026 does not mention shells or teeth, so Caspersen is not on this list. The vehicle lot closure is on the Caspersen page. <a href="/beaches/anastasia/">Anastasia</a> is on the list because the state park page names clam, scallop, oyster, and olive shells and says most of what you find was or could still be alive.</p>
+<h2>Beaches</h2>%s%s''' % (lst(shell), pack_reads(
+              [
+                  ("/beaches/delnor-wiggins/", "Delnor-Wiggins Pass", "The park page claims some of the best Gulf shelling and bans live shells."),
+                  ("/beaches/anastasia/", "Anastasia State Park", "Named shells, a low tide note, and a warning that the find may still be alive."),
+                  ("/beaches/lovers-key/", "Lovers Key State Park", "The park calls its own beach some of the best shelling on that coast."),
+              ],
+              [
+                  ("/guides/how-to-pick-a-florida-beach/", "How to pick a Florida beach", "Shells are one constraint. Parking and dogs are others."),
+                  ("/regions/gulf/", "Gulf Coast beaches", "Where most of the shelling pages in this guide sit."),
+                  ("/beaches/caspersen-beach/", "Caspersen Beach", "Not a shelling listing. The county page does not mention teeth."),
+                  ("/guides/best-for-dogs/", "Beaches that allow dogs on the sand", "A shell walk and a dog are often different beaches."),
+              ],
+              '<p>Three pages that actually describe shells: <a href="/beaches/delnor-wiggins/">Delnor-Wiggins</a>, <a href="/beaches/anastasia/">Anastasia</a>, and <a href="/beaches/lovers-key/">Lovers Key</a>. <a href="/beaches/caspersen-beach/">Caspersen</a> is the famous name we left off because the county facility page does not mention shells or teeth.</p>',
+          )),
           [("Can I take a live shell home?", "FWC requires a recreational saltwater fishing license to take a shell with a living animal, even from shore, and some counties and parks ban or limit live shells."),
            ("Why is a famous shelling beach missing?", "If the county or state park page we checked does not mention shells, it is not on this list. Tell us if a newer page does.")],
           [FWC_SHELLS] + shell[0]["sources"][:2])
@@ -599,29 +694,80 @@ def guides():
     guide("/guides/best-for-kids/", "Best Florida Beaches for Kids | %s" % BRAND, "Beaches that suit kids",
           "Florida beaches with a playground, a guarded swim, or a protected cove the park page describes for children.",
           '''<div class="answer"><p><strong>How this list is made.</strong> A beach is here when the agency page lists a playground, staffed lifeguards, or a protected spot it describes for children. Calm looking water is not a promise.</p></div>
-<p>Lifeguard hours end. Flags change. Read the beach page for what is actually staffed, and the red tide guide the morning you go.</p>
-<h2>Beaches</h2>%s''' % lst(kids),
+<p>Lifeguard hours end. Flags change. Read the beach page for what is actually staffed, and the red tide guide the morning you go. A playground on the amenity list is not a lifeguard. <a href="/beaches/anastasia/">Anastasia</a> lists a playground in the beach access area and staffs a designated swim only from Memorial Day through Labor Day. <a href="/beaches/caspersen-beach/">Caspersen</a> is not on this list: the county says the playground is closed, and a lifeguard is not in the amenity list.</p>
+<h2>Beaches</h2>%s%s''' % (lst(kids), pack_reads(
+              [
+                  ("/beaches/anastasia/", "Anastasia State Park", "A beach access playground, and lifeguards only in the summer window."),
+                  ("/beaches/siesta-beach/", "Siesta Beach", "A shaded playground and a published lifeguard window, seven days a week."),
+                  ("/beaches/coquina-beach/", "Coquina Beach", "A playground plus a county lifeguard listing on Anna Maria."),
+              ],
+              [
+                  ("/guides/best-for-accessibility/", "Beaches with a wheelchair or mat", "A playground does not mean a mat onto the sand."),
+                  ("/guides/red-tide/", "Red tide history and where to check", "Check the morning you go. This list does not freeze a cell count."),
+                  ("/regions/gulf/", "Gulf Coast beaches", "Most of the playground and guard listings in this guide."),
+                  ("/beaches/caspersen-beach/", "Caspersen Beach", "Playground closed. Not a kids listing."),
+              ],
+              '<p>Compare the staffing, not the playground photo you remember. <a href="/beaches/siesta-beach/">Siesta Beach</a> publishes a lifeguard window. <a href="/beaches/anastasia/">Anastasia</a> limits that window to Memorial Day through Labor Day. <a href="/beaches/coquina-beach/">Coquina</a> is one of three Manatee beaches the county lifeguard page names.</p>',
+          )),
           [("Are these beaches lifeguarded all day?", "Only if that beach page says so. Some parks staff a seasonal window. Others say lifeguards are not provided."),
-           ("Is a playground the same as a safe swim?", "No. A playground is on land. Read the lifeguard line before anyone goes in.")],
+           ("Is a playground the same as a guarded swim?", "No. A playground is on land. Read the lifeguard line before anyone goes in.")],
           [FDOH, FWC_FAQ])
 
     guide("/guides/best-for-accessibility/", "Most Accessible Florida Beaches | %s" % BRAND, "Beaches with a wheelchair or an access mat",
           "Florida beaches where the park page offers a beach wheelchair, a swimming chair, or an access mat. Ask the park about availability.",
           '''<div class="answer"><p><strong>How this list is made.</strong> A beach is here when the managing agency page says it has a beach wheelchair, a swimming chair, or a mat onto the sand. We do not infer access from a paved lot alone.</p></div>
-<p>Chairs are often first come, first served, and some parks ask you to reserve. The page says where to ask. We do not publish a phone number here. Use the link on the beach page.</p>
-<h2>Beaches</h2>%s''' % lst(access),
+<p>Chairs are often first come, first served, and some parks ask you to reserve. The page says where to ask. We do not publish a phone number here. Use the link on the beach page. <a href="/beaches/anastasia/">Anastasia</a> names a Mobi-Mat and elevated boardwalks, with free chairs at the beach shop or Anastasia Water Sports. <a href="/beaches/siesta-beach/">Siesta Beach</a> is the page that states a mat length: 504 feet toward the Gulf.</p>
+<h2>Beaches</h2>%s%s''' % (lst(access), pack_reads(
+              [
+                  ("/beaches/siesta-beach/", "Siesta Beach", "Free chairs from the main pavilion, and a mat the county measures at 504 feet."),
+                  ("/beaches/anastasia/", "Anastasia State Park", "A named Mobi-Mat, boardwalks, and free chairs at the beach shop."),
+                  ("/beaches/honeymoon-island/", "Honeymoon Island", "Free beach wheelchairs on the state park page, plus a separate pet beach."),
+              ],
+              [
+                  ("/guides/how-to-pick-a-florida-beach/", "How to pick a Florida beach", "A mat is one constraint. A dog or a lifeguard can rule the same beach out."),
+                  ("/beaches/delnor-wiggins/", "Delnor-Wiggins Pass", "Manual chairs in two lots and an electric chair the page says is free."),
+                  ("/regions/gulf/", "Gulf Coast beaches", "Where Siesta, Honeymoon Island, and Delnor-Wiggins sit."),
+                  ("/regions/atlantic/", "Atlantic Coast beaches", "Anastasia is the Atlantic page with a named mat."),
+              ],
+              '<p>A paved lot is not a mat. <a href="/beaches/siesta-beach/">Siesta</a> states 504 feet. <a href="/beaches/anastasia/">Anastasia</a> names a Mobi-Mat and does not state a length. <a href="/beaches/honeymoon-island/">Honeymoon Island</a> offers free chairs and a pet beach that is not the main swim.</p>',
+          )),
           [("Is the chair free?", "When the park page says there is no charge, the beach page repeats that. If the page is silent, we do not guess."),
            ("Does a mat reach the water?", "Only if the park page describes the length or the route. Siesta Beach is one page that states a length.")],
           access[0]["sources"][:2])
 
+    sunset_others = [b for b in gulf if not b.get("sunset")]
     guide("/guides/best-for-sunsets/", "Best Florida Beaches for Sunsets | %s" % BRAND, "Where the sun sets over the water",
-          "Gulf beaches face west, so the open water is the sunset side. A few park pages also mention sunset. We do not rank the view.",
-          '''<div class="answer"><p><strong>How to use this page.</strong> On the Gulf, the open water is to the west, so a clear evening puts the sun over the water. Atlantic beaches look toward sunrise instead. This is geography, not a score. Weather and buildings still block the view.</p></div>
-<h2>Park pages that mention sunset</h2>%s
-<h2>Other Gulf beaches in this guide</h2><p>These also face the Gulf. Their park pages may not discuss sunset. The direction is the same.</p>%s''' % (lst(sunset_named), lst([b for b in gulf if not b.get("sunset")])),
-          [("Which beach has the best sunset?", "We do not rank sunsets. Gulf beaches have the sun setting over the open water when the sky is clear. Read the park page for access and parking."),
-           ("Do Atlantic beaches get a sunset over the water?", "No. They face east. The morning light is the ocean light.")],
-          [FWC_FAQ])
+          "Three park pages mention sunset. Other Gulf beaches face west too. We do not rank the view.",
+          '''<div class="answer"><p><strong>Direction, not a ranking.</strong> On the Gulf the open water is to the west, so a clear evening can put the sun over the water. Atlantic beaches in this guide face the other way. We do not score the view. Weather, a dune, or a building can still block it.</p></div>
+<p>Only three park pages we use actually mention sunset. The other %d Gulf beaches face the same water and stay silent about it. They are listed on the <a href="/regions/gulf/">Gulf Coast region</a>, not repeated here. Copying that whole list onto this page made the two pages read like the same article.</p>
+<h2>Coquina Beach</h2>
+<p><a href="/beaches/coquina-beach/">Coquina Beach</a> is the Manatee County page whose introduction talks about the sun setting over the water. That sentence was recorded on our Coquina page on 16 Nov 2026 and was not reopened today. The county lifeguard page names Coquina as one of three guarded beaches. The location page says pets are prohibited and lists beach wheelchairs. It does not state a parking price or a space count.</p>
+<h2>Delnor-Wiggins Pass</h2>
+<p><a href="/beaches/delnor-wiggins/">Delnor-Wiggins Pass</a> was rechecked on 20 Nov 2026. The picnicking section calls it a lunch or sunset picnic spot. The swimming section is a different fact: dangerous currents and riptides can occur in Wiggins Pass, so swimming runs from the southern boundary to the double red flags at the northern end of parking area four. Those flags are a boundary the park prints, not a forecast we update. The page also tells visitors to read warning flag signs at each parking area entrance. It says lifeguards are not provided. We do not repeat the park's green flag wording.</p>
+<h2>Henderson Beach</h2>
+<p><a href="/beaches/henderson-beach/">Henderson Beach</a> was rechecked the same day. The beach section says a visit can include a sunset. The swimming section says to read the warning flag signs at the welcome stations and on the beach, and it does not say a lifeguard is on duty. The parking section still lists 422 day use spaces, plus 24 recreational vehicle spaces and 20 accessible spaces. Pets are not allowed on the sand.</p>
+%s''' % (len(sunset_others), pack_reads(
+              [
+                  ("/beaches/coquina-beach/", "Coquina Beach", "The Manatee introduction mentions sunset, and the county lists lifeguards."),
+                  ("/beaches/delnor-wiggins/", "Delnor-Wiggins Pass", "A sunset picnic line, plus double red flags as the pass boundary."),
+                  ("/beaches/henderson-beach/", "Henderson Beach", "A sunset mention, flag signs, and no lifeguard promise. 422 day use spaces."),
+              ],
+              [
+                  ("/regions/gulf/", "Gulf Coast beaches", "The full west facing set, including pages that never mention sunset."),
+                  ("/regions/atlantic/", "Atlantic Coast beaches", "Sunrise over the water. Not this list."),
+                  ("/beaches/anastasia/", "Anastasia State Park", "An Atlantic beach with a summer lifeguard window, not a sunset claim."),
+                  ("/guides/how-to-pick-a-florida-beach/", "How to pick a Florida beach", "A sunset does not fix a closed lot or a dog rule."),
+              ],
+              '<p>Three different planning problems. <a href="/beaches/coquina-beach/">Coquina</a> pairs a sunset sentence with a county lifeguard listing. <a href="/beaches/henderson-beach/">Henderson</a> mentions sunset and flag signs, and does not say a lifeguard is on duty. <a href="/beaches/delnor-wiggins/">Delnor-Wiggins</a> calls itself a sunset picnic spot and uses double red flags as the line where swimming stops at the pass.</p>',
+          )),
+          [("Which beach has the best sunset?", "We do not rank sunsets. Three park pages mention sunset: Coquina, Delnor-Wiggins, and Henderson. Other Gulf beaches face west and do not say so. Read the park page for access and parking."),
+           ("Do Atlantic beaches get a sunset over the water?", "No. They face east. Anastasia is an Atlantic page in this guide. The morning light is the ocean light.")],
+          [
+              ("Manatee County: Coquina Beach", "https://www.mymanatee.org/connect/locations/location-details/coquina-beach"),
+              fsp("delnor-wiggins-pass-state-park", "Delnor-Wiggins Pass"),
+              fsp("henderson-beach-state-park", "Henderson Beach"),
+          ],
+          verified_h=RUN_H, published=PUBLISHED, modified=RUN)
 
 def home():
     regions = "".join('<li class="card"><h3><a href="/regions/%s/">%s</a></h3><p>%s</p></li>' % (k, E(R["name"]), E(R["blurb"])) for k, R in REGIONS.items())
