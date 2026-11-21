@@ -38,7 +38,6 @@ counties/miami-dade
 counties/nassau
 counties/okaloosa
 counties/palm-beach
-counties/pasco
 counties/pinellas
 counties/st-johns
 counties/st-lucie

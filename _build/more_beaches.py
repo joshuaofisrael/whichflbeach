@@ -110,16 +110,45 @@ park("caladesi-island", "Caladesi Island State Park", "Caladesi Island", "gulf",
 
 park("anclote-key", "Anclote Key Preserve State Park", "Anclote Key", "gulf", "pasco", "Pasco County", "Tarpon Springs", "gulf",
      dogs="designated", shell="yes", chair="unstated", mat="unstated", guard="no", restroom="yes",
-     parking="The page says you reach the islands by boat or by ferry from Tarpon Springs or New Port Richey. It does not describe a car lot on the island.",
-     fills="There is no island car lot in the page we checked.",
+     parking="The experiences page checked 21 Nov 2026 says you reach the islands by boat or by ferry from Tarpon Springs or New Port Richey. It does not describe a car lot on the island, and it does not name a ferry operator, a fare, or a mainland lot fee.",
+     fills="There is no island car lot on the page checked 21 Nov 2026.",
      dogs_note="The page says pets are not permitted on Anclote Key. Pets are permitted only on North Anclote Bar, on a six foot handheld leash.",
      shell_note="The page says shell collecting is a favorite activity and that collecting live shellfish is prohibited.",
-     chair_note=NOCHAIR, mat_note=NOMAT, guard_note=FSP_GUARD_NO,
+     chair_note=NOCHAIR, mat_note=NOMAT,
+     guard_note="The swimming section checked 21 Nov 2026 says there are no lifeguards on duty and that swimming is at your own risk. The beach section says lifeguards are not provided and tells visitors to read the warning flag signs. We do not copy the color list.",
      rest_note="The page says there are two compostable toilets on Anclote Key, one at the north end and one near the lighthouse. There is no running water system described.",
-     angle="Anclote Key is a boat or ferry preserve in Pasco. Shells are mentioned, live shellfish are not allowed, and dogs are limited to North Anclote Bar.",
+     angle="Anclote Key is a boat or ferry preserve in Pasco, with no car lot and no lifeguard on duty. Dogs are limited to North Anclote Bar.",
      who="It suits a boater who wants shells and will leave the dog off Anclote Key itself. It does not suit a car day or a guarded swim.",
      sources=[fsp("anclote-key-preserve-state-park", "Anclote Key")], nearby=["honeymoon-island", "caladesi-island"],
-     extra=["The page says an 1,800 foot section of Three Rooker beach is closed from May 1 to August 1 for nesting shorebirds."])
+     verified="2026-11-21", modified="2026-11-21",
+     extra=["The page says an 1,800 foot section of Three Rooker beach is closed from May 1 to August 1 for nesting shorebirds."],
+     extra_html=[
+         '<p>Rechecked 21 Nov 2026. The boating section says the park has nearly 12,000 acres of gulf waters. The fishing section says anglers report sea trout, redfish, snook, and sharks. That is the park\'s note about catches, not a forecast. The historic site section says the lighthouse is 110 feet, was built in 1887, and is open to the public only during special events.</p>',
+         '<p>Primitive camping is permitted on the very north end of Anclote Key. The page says there is no water and no other amenities, so you bring what you need and pack it out. A compostable toilet serves that area. The restroom section places the second toilet a short distance from the lighthouse compound.</p>',
+         '<p>There is still no price for a car, because there is still no car lot. The <a href="/guides/free-parking/">free parking guide</a> puts this island next to the lots that charge nothing and the lots that print a fee. <a href="/counties/pasco/">Pasco County</a> in this guide is this preserve. If you need a parked car, <a href="/beaches/honeymoon-island/">Honeymoon Island</a> is the state park south of here with a lot.</p>',
+     ],
+     reads={
+         "mid": [
+             ("/guides/free-parking/", "Which beaches have free parking", "Anclote is the row with no car lot, not a free lot."),
+             ("/beaches/honeymoon-island/", "Honeymoon Island", "A drive-up state park. The experiences page does not print the day use fee."),
+             ("/beaches/caladesi-island/", "Caladesi Island", "The other ferry island, reached from Honeymoon Island."),
+             ("/counties/pasco/", "Pasco County", "The county page for this one preserve, including the dog split and the lighthouse."),
+         ],
+         "end": [
+             ("/beaches/fort-de-soto/", "Fort De Soto", "6 dollar county parking, and a ferry the park page points at Egmont Key."),
+             ("/guides/best-shelling/", "Beaches where shelling is described", "Anclote is listed because the park page mentions shells and bans live shellfish."),
+             ("/regions/gulf/", "Gulf Coast beaches", "Pasco is the north end of the Gulf pages in this guide."),
+             ("/guides/how-to-pick-a-florida-beach/", "How to pick a Florida beach", "A missing lot is the constraint that ruins a car day."),
+         ],
+         "compare": '<p><a href="/beaches/anclote-key/">Anclote</a> has no car lot. <a href="/beaches/siesta-beach/">Siesta Beach</a> states over 950 free spaces. <a href="/beaches/fort-de-soto/">Fort De Soto</a> states 6 dollars. <a href="/beaches/anastasia/">Anastasia</a> states 8 dollars as admission.</p>',
+         "compare_title": "Check another lot",
+     },
+     faqs=[
+         ("Is there free parking at Anclote Key?", "No car lot is described. The page checked 21 Nov 2026 says you arrive by boat or by ferry from Tarpon Springs or New Port Richey, and it does not print a fare."),
+         ("Can I bring a dog to Anclote Key?", "Pets are not permitted on Anclote Key. They are permitted only on North Anclote Bar, on a six foot handheld leash."),
+         ("Are there lifeguards at Anclote Key?", "The swimming section says there are no lifeguards on duty and that swimming is at your own risk. The beach section says lifeguards are not provided. We do not copy the flag color list."),
+         ("Is the lighthouse open every day?", "The page says the 110 foot lighthouse was built in 1887 and is open to the public only during special events."),
+     ])
 
 park("egmont-key", "Egmont Key State Park", "Egmont Key", "gulf", "hillsborough", "Hillsborough County", "Tampa Bay", "gulf",
      dogs="no", shell="yes", chair="unstated", mat="unstated", guard="no", restroom="no",
@@ -274,7 +303,7 @@ park("deer-lake", "Deer Lake State Park", "Deer Lake", "panhandle", "walton", "W
 
 park("henderson-beach", "Henderson Beach State Park", "Henderson Beach", "panhandle", "okaloosa", "Okaloosa County", "Destin", "gulf",
      dogs="no", shell="unstated", chair="yes", mat="unstated", guard="unstated", restroom="yes", sunset=True, kids=True,
-     parking="The page says the day use area has 422 spaces, plus 24 recreational vehicle spaces and 20 accessible spaces. " + FEE,
+     parking="The experiences page says the day use area has 422 spaces, plus 24 recreational vehicle spaces and 20 accessible spaces, and it does not print the day use fee. The hours page checked 21 Nov 2026 lists 6 dollars per vehicle for two to eight people, 4 dollars for a single occupant vehicle, and 2 dollars for a pedestrian, a bicyclist, or an extra passenger.",
      fills=NOFILL,
      dogs_note="The page says no animals are allowed on the beach. Pets may be in the lots, on the nature trail, and on the day use sidewalk, on a leash no longer than six feet.",
      shell_note=NOSHELL,
@@ -284,7 +313,28 @@ park("henderson-beach", "Henderson Beach State Park", "Henderson Beach", "panhan
      rest_note="The page says three of six picnic pavilions are next to restrooms, and that outdoor cold showers are by the day use restrooms.",
      angle="Henderson Beach is the Destin state park with 422 day use spaces, a beach wheelchair, and a page that mentions sunset.",
      who="It suits a large lot and a Gulf evening. The page does not promise a lifeguard. Dogs stay off the sand.",
-     sources=[fsp("henderson-beach-state-park", "Henderson Beach")], nearby=["topsail-hill", "perdido-key"])
+     sources=[fsp("henderson-beach-state-park", "Henderson Beach"),
+              ("Florida State Parks: Henderson Beach hours and fees", "https://www.floridastateparks.org/parks-and-trails/henderson-beach-state-park/hours-fees")],
+     nearby=["topsail-hill", "perdido-key"],
+     verified="2026-11-21", modified="2026-11-21",
+     extra_html=[
+         '<p>The day use price is on the hours page, not the experiences page. The figures in the parking line were rechecked 21 Nov 2026. <a href="/guides/free-parking/">The free parking guide</a> puts this 6 dollar admission next to the lots that charge nothing.</p>',
+     ],
+     reads={
+         "mid": [
+             ("/guides/free-parking/", "Which beaches have free parking", "Henderson is a 6 dollar vehicle admission, not a free lot."),
+             ("/beaches/big-lagoon/", "Big Lagoon", "The same 6, 4, and 2 dollar split, plus a separate boat launch price."),
+             ("/beaches/siesta-beach/", "Siesta Beach", "The Sarasota lot that states over 950 free spaces."),
+         ],
+         "end": [
+             ("/beaches/anastasia/", "Anastasia State Park", "8 dollars a vehicle on the hours page, not 6."),
+             ("/beaches/big-talbot/", "Big Talbot Island", "3 dollars at the named lots, and a wayside picnic area with no entry fee."),
+             ("/regions/panhandle/", "Panhandle beaches", "Henderson sits with the other state park beaches on this coast."),
+             ("/guides/how-to-pick-a-florida-beach/", "How to pick a Florida beach", "A printed admission is a planning fact. A silent experiences page is not a free lot."),
+         ],
+         "compare": '<p><a href="/beaches/henderson-beach/">Henderson</a> is 6 dollars. <a href="/beaches/anastasia/">Anastasia</a> is 8 dollars. <a href="/beaches/big-talbot/">Big Talbot</a> is 3 dollars at the lots the parking section names. <a href="/beaches/siesta-beach/">Siesta</a> states a free county lot.</p>',
+         "compare_title": "Check another price",
+     })
 
 park("perdido-key", "Perdido Key State Park", "Perdido Key", "panhandle", "escambia", "Escambia County", "Perdido Key", "gulf",
      dogs="unstated", shell="yes", chair="yes", mat="unstated", guard="no", restroom="yes",
@@ -302,7 +352,8 @@ park("perdido-key", "Perdido Key State Park", "Perdido Key", "panhandle", "escam
 
 park("big-lagoon", "Big Lagoon State Park", "Big Lagoon", "panhandle", "escambia", "Escambia County", "Pensacola", "bay",
      dogs="no", shell="unstated", chair="yes", mat="unstated", guard="no", restroom="yes", kids=True,
-     parking="The page says parking is at the west beach and the amphitheater. " + FEE, fills=NOFILL,
+     parking="The experiences page says parking is at the west beach and the amphitheater and does not print a price. The hours page checked 21 Nov 2026 lists 6 dollars per vehicle for two to eight people, 4 dollars for a single occupant vehicle, and 2 dollars for a pedestrian, a bicyclist, or an extra passenger. The same hours page lists a boat launch at 10 dollars for one person with a boat and 12 dollars for two to eight people with a boat.",
+     fills=NOFILL,
      dogs_note="The page says Escambia County prohibits pets on beaches and waterways. Pets are allowed in designated areas, including the campground.",
      shell_note=NOSHELL,
      chair_note="The page says beach wheelchairs are free at the ranger station.",
@@ -310,7 +361,28 @@ park("big-lagoon", "Big Lagoon State Park", "Big Lagoon", "panhandle", "escambia
      rest_note="The page says restrooms are at the west beach and the east beach, with outdoor showers at picnic areas.",
      angle="Big Lagoon is the Pensacola state park the page is careful to call an Intracoastal beach, not a Gulf beach.",
      who="It suits a calm bay swim, a playground, and a beach wheelchair. It is the wrong page if you want a Gulf sunset or a dog on the sand.",
-     sources=[fsp("big-lagoon-state-park", "Big Lagoon")], nearby=["perdido-key", "henderson-beach"])
+     sources=[fsp("big-lagoon-state-park", "Big Lagoon"),
+              ("Florida State Parks: Big Lagoon hours and fees", "https://www.floridastateparks.org/parks-and-trails/big-lagoon-state-park/hours-fees")],
+     nearby=["perdido-key", "henderson-beach"],
+     verified="2026-11-21", modified="2026-11-21",
+     extra_html=[
+         '<p>The experiences page still does not print the day use fee. The hours page does, and those figures were rechecked 21 Nov 2026. <a href="/guides/free-parking/">The free parking guide</a> lines this 6 dollar admission up against Siesta\'s free lot and Big Talbot\'s 3 dollar lots.</p>',
+     ],
+     reads={
+         "mid": [
+             ("/guides/free-parking/", "Which beaches have free parking", "Big Lagoon is a priced admission. The experiences page alone would have hidden the number."),
+             ("/beaches/henderson-beach/", "Henderson Beach", "The same 6, 4, and 2 dollar split, without the boat launch line."),
+             ("/beaches/big-talbot/", "Big Talbot Island", "3 dollars, plus a wayside picnic area the page says has no entry fee."),
+         ],
+         "end": [
+             ("/beaches/siesta-beach/", "Siesta Beach", "A county lot that states over 950 free spaces."),
+             ("/beaches/perdido-key/", "Perdido Key", "The Gulf beach this park pairs with. Confirm its own fee page before you treat the lots as free."),
+             ("/regions/panhandle/", "Panhandle beaches", "Big Lagoon is the Intracoastal page, not a Gulf sunset page."),
+             ("/guides/how-to-pick-a-florida-beach/", "How to pick a Florida beach", "Read the hours page when the experiences page skips the price."),
+         ],
+         "compare": '<p><a href="/beaches/big-lagoon/">Big Lagoon</a> is 6 dollars to enter, and the boat launch is a separate price. <a href="/beaches/henderson-beach/">Henderson</a> is 6 dollars without that boat line. <a href="/beaches/big-talbot/">Big Talbot</a> prints 3 dollars. <a href="/beaches/siesta-beach/">Siesta</a> states a free lot.</p>',
+         "compare_title": "Check another price",
+     })
 
 park("st-andrews", "St. Andrews State Park", "St. Andrews", "panhandle", "bay", "Bay County", "Panama City Beach", "gulf",
      dogs="no", shell="unstated", chair="yes", mat="unstated", guard="unstated", restroom="yes", kids=True,
