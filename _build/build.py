@@ -130,6 +130,9 @@ TODAY_H = "19 Nov 2026"
 # 20 Nov 2026 recheck. Do not point the 19 Nov dog guide at this date.
 RUN = "2026-11-20"
 RUN_H = "20 Nov 2026"
+# 21 Nov 2026 recheck. Do not point older guides at this date.
+PARK = "2026-11-21"
+PARK_H = "21 Nov 2026"
 # Explicit lastmod (and first-publish when the second value is set) for hubs that changed
 # after the site-wide PUBLISHED date. Unlisted hubs keep PUBLISHED.
 HUB_DATES = {
@@ -139,21 +142,23 @@ HUB_DATES = {
     "/counties/duval/": (None, "2026-11-18"),
     # Material edits 19 Nov (dogs refresh, AdSense/privacy, Siesta and Fort De Soto fact updates)
     # Beach index, Gulf, Atlantic, Sarasota, and St. Johns cards changed again on 20 Nov.
-    "/beaches/": (None, "2026-11-20"),
+    "/beaches/": (None, "2026-11-21"),
     "/regions/": (None, "2026-11-19"),
-    "/regions/gulf/": (None, "2026-11-20"),
+    "/regions/gulf/": (None, "2026-11-21"),
     "/regions/atlantic/": (None, "2026-11-20"),
     "/counties/pinellas/": (None, "2026-11-19"),
-    "/counties/sarasota/": (None, "2026-11-20"),
+    "/counties/sarasota/": (None, "2026-11-21"),
+    "/counties/pasco/": (None, "2026-11-21"),
     "/counties/st-johns/": (None, "2026-11-20"),
     "/about/": (None, "2026-11-19"),
+    "/guides/free-parking/": ("2026-11-21", "2026-11-21"),
     "/guides/best-for-dogs/": (None, "2026-11-19"),
     "/guides/best-for-snorkeling/": ("2026-11-19", "2026-11-19"),
     "/guides/best-for-accessibility/": (None, "2026-11-20"),
     "/guides/best-for-kids/": (None, "2026-11-20"),
     "/guides/best-for-sunsets/": (None, "2026-11-20"),
-    "/guides/best-shelling/": (None, "2026-11-20"),
-    "/guides/how-to-pick-a-florida-beach/": (None, "2026-11-20"),
+    "/guides/best-shelling/": (None, "2026-11-21"),
+    "/guides/how-to-pick-a-florida-beach/": (None, "2026-11-21"),
     "/guides/red-tide/": (None, "2026-11-20"),
     "/guides/beach-flag-colors/": ("2026-11-20", "2026-11-20"),
     "/": (None, "2026-11-20"),
@@ -250,12 +255,12 @@ def src_list(pairs):
 def byline(date_h=None):
     return '<p class="byline">By %s · Last verified %s</p>' % (BRAND, date_h or PUBLISHED_H)
 
-def article_ld(headline, path, about=None, published=None, modified=None):
+def article_ld(headline, path, about=None, published=None, modified=None, image=None):
     data = {"@context": "https://schema.org", "@type": "Article", "headline": headline,
             "datePublished": published or PUBLISHED, "dateModified": modified or published or PUBLISHED,
             "author": {"@type": "Organization", "name": BRAND, "url": BASE},
             "publisher": {"@type": "Organization", "name": BRAND, "url": BASE, "logo": {"@type": "ImageObject", "url": url("/logo.png")}},
-            "image": url("/og.png"), "mainEntityOfPage": url(path)}
+            "image": url(image) if image else url("/og.png"), "mainEntityOfPage": url(path)}
     if about:
         data["about"] = about
     return data
@@ -299,7 +304,7 @@ def compare_box(heading, lines_html):
         '<h2 id="compare-h">%s</h2>%s</aside>'
     ) % (E(heading), lines_html)
 
-def news_thumb(rel, alt, scene):
+def news_thumb(rel, alt, scene=""):
     """One news-style thumbnail. Insert the file only when it is actually in the repo."""
     fp = os.path.join(ROOT, rel)
     if os.path.isfile(fp):
@@ -500,7 +505,7 @@ def region_pages():
         extra = ""
         verified = None
         if key == "gulf":
-            verified = RUN_H
+            verified = PARK_H
             faqs = [
                 ("Does every Gulf beach have the sun setting over the water?", "The open water on this coast is to the west, so a clear evening can put the sun over the water. Weather, a dune, or a building can still block it. This page does not rank views. The sunset guide names the few park pages that actually mention sunset."),
                 ("Which Gulf beach should I open first?", "Open the constraint that would ruin the day. A dog points to Fort De Soto in this guide. A guarded swim points to the county pages that list lifeguards, such as Siesta Beach. A closed lot matters more than the coast: Caspersen's vehicle lot was closed on the county facility page checked 20 Nov 2026."),
@@ -509,6 +514,7 @@ def region_pages():
 <p>Dog rules change at the county line. In this guide the Pinellas exception is the designated dog beach at <a href="/beaches/fort-de-soto/">Fort De Soto</a>. Most Gulf state park pages we cite keep pets off the sand. <a href="/beaches/honeymoon-island/">Honeymoon Island</a> is the state park with a named pet beach, separate from the main swim.</p>
 <p>A lifeguard line is whatever that county prints. <a href="/beaches/siesta-beach/">Siesta Beach</a> has a published window on the Sarasota beaches page. <a href="/beaches/caspersen-beach/">Caspersen Beach</a> is the opposite planning problem: on 20 Nov 2026 the <a href="https://www.sarasotacountyparks.com/Home/Components/FacilityDirectory/FacilityDirectory/603/6738" rel="nofollow noopener">county facility page</a> said the Harbor Drive vehicle lot, the restrooms, and the playground were closed after the 2024 storm washout, with entry on foot or by bicycle from South Brohard. That fact is written out on the Caspersen page.</p>
 <p>Boat-only islands are not a backup lot. <a href="/beaches/cayo-costa/">Cayo Costa</a> and <a href="/beaches/don-pedro/">Don Pedro</a> are reached by boat. If the day depends on a car, pick a drive-up beach in the same county before you leave.</p>
+<p>Parking is a separate question from the coast. <a href="/guides/free-parking/">Which beaches have free parking</a> puts Sarasota's free lots next to state park admission and next to islands with no car lot. Those agency pages were opened 21 Nov 2026.</p>
 ''' + pack_reads(
                 [
                     ("/guides/best-for-sunsets/", "Where the sun sets over the water", "Direction only, plus the three park pages that mention sunset."),
@@ -556,8 +562,67 @@ def county_pages():
         intro = "%s has %d beaches in this guide. Each page uses that county's park page or the Florida State Parks page for the park, plus FWC and the Florida Department of Health for shells, red tide and bacteria." % (name, len(bs))
         path = "/counties/%s/" % key
         faqs = [("Where do the %s facts come from?" % name, "From the county or city park page, or the Florida State Parks experiences page, linked on each beach. Live red tide and bacteria results stay on FWC and the Florida Department of Health.")]
-        body = '<article class="prose wide"><h1>%s beaches</h1>%s<p class="answer">%s</p><ul class="cards">%s</ul>%s%s</article>' % (
-            E(name), byline(), E(intro), "".join(card(b) for b in bs), pick_links(bs, region), faq_html(faqs))
+        extra = ""
+        tail = ""
+        verified = None
+        if key == "pasco":
+            verified = PARK_H
+            intro = "Anclote Key is the Pasco beach in this guide. You arrive by boat or ferry. The park page prints no car lot and no lifeguard on duty."
+            extra = '''<p>Pasco's entry in this guide is one island preserve, not a row of drive-up lots. <a href="/beaches/anclote-key/">Anclote Key Preserve State Park</a> was rechecked on 21 Nov 2026 against the Florida State Parks experiences page. The boating section says you can reach the islands by boat or by ferry from Tarpon Springs or New Port Richey. It does not name the ferry, print a fare, or describe a car lot on the island. A search for free parking ends at the water. If a ferry charges, that price is not on the park page, so it is not here.</p>
+<p>The swimming section on that same check says there are no lifeguards on duty and that swimming is at your own risk. The beach section says lifeguards are not provided and tells visitors to read the warning flag signs. This page does not copy the color list. A flag drawing on the park site is not a forecast we repeat.</p>
+<p>Dogs are split in one sentence pair. Pets are not permitted on Anclote Key. Pets are permitted only on North Anclote Bar, on a six foot handheld leash. Shell collecting is listed as a favorite activity, and collecting live shellfish is prohibited.</p>
+<p>An 1,800 foot section of Three Rooker beach is closed from May 1 to August 1 for nesting shorebirds. The boating section says the park covers nearly 12,000 acres of gulf waters. The fishing section says anglers report sea trout, redfish, snook, and sharks. That is the park's note about what people catch. It is not a promise for the day you go.</p>
+<p>The historic site section says the lighthouse is 110 feet and was built in 1887, and that it is open to the public only during special events. Primitive camping is permitted on the very north end of Anclote Key. The page says there is no water and no other amenities there, so you bring what you need and pack it out. A compostable toilet serves that camping area. A second compostable toilet sits a short distance from the lighthouse compound. The page does not describe running water.</p>
+''' + next_reads([
+                ("/guides/free-parking/", "Which beaches have free parking", "Anclote is the row with no car lot. Siesta is the free lot. Fort De Soto is 6 dollars."),
+                ("/beaches/honeymoon-island/", "Honeymoon Island", "The next state park south. It has a lot, and the experiences page still does not print the day use fee."),
+                ("/beaches/fort-de-soto/", "Fort De Soto", "A Pinellas park that prints a 6 dollar county parking fee."),
+                ("/beaches/caladesi-island/", "Caladesi Island", "Another boat or ferry island, reached from Honeymoon Island."),
+            ], "Keep reading", "next-mid")
+            tail = compare_box(
+                "Check another way in",
+                '<p><a href="/beaches/anclote-key/">Anclote Key</a> has no car lot on the page we checked. <a href="/beaches/honeymoon-island/">Honeymoon Island</a> is the drive-up state park next door, with a pet beach and a fee the experiences page does not print. <a href="/beaches/fort-de-soto/">Fort De Soto</a> prints 6 dollars and runs a ferry toward Egmont Key, which is a different island.</p>'
+            ) + next_reads([
+                ("/regions/gulf/", "Gulf Coast beaches", "Pasco sits at the north end of the Gulf pages in this guide."),
+                ("/guides/how-to-pick-a-florida-beach/", "How to pick a Florida beach", "A missing lot is a constraint, the same as a dog rule or a lifeguard window."),
+                ("/beaches/egmont-key/", "Egmont Key", "Boat only, including the ferry the Fort De Soto page names."),
+                ("/guides/best-shelling/", "Beaches where shelling is described", "Anclote is on that list because the park page mentions shells."),
+            ], "More to check", "next-end")
+            faqs = [
+                ("Is there free parking at Anclote Key?", "No car lot is described. The experiences page checked 21 Nov 2026 says you arrive by boat or by ferry from Tarpon Springs or New Port Richey, and it does not print a fare or a mainland lot fee."),
+                ("Can I bring a dog to Anclote Key?", "Pets are not permitted on Anclote Key. They are permitted only on North Anclote Bar, on a six foot handheld leash."),
+                ("Are there lifeguards at Anclote Key?", "The swimming section says there are no lifeguards on duty and that swimming is at your own risk. The beach section says lifeguards are not provided."),
+                ("Is the lighthouse open every day?", "The page says the 110 foot lighthouse was built in 1887 and is open to the public only during special events."),
+            ]
+        elif key == "sarasota":
+            verified = PARK_H
+            intro = "Sarasota County says select beach parking is free. Siesta Beach states over 950 free spaces. Several accesses are titled as no parking."
+            extra = '''<p>The <a href="https://www.sarasotacountyparks.com/parks-and-facilities/discover-a-park/type-of-park/beaches" rel="nofollow noopener">beaches directory</a> checked 21 Nov 2026 says parking is available at select Sarasota County beaches and parks for free, on a first-come, first-served basis. It does not print a dollar amount. It also does not say every shoreline has a lot. The titles that take the lot away are <a href="/beaches/north-lido/">North Lido</a> (no parking), <a href="/beaches/palmer-point/">Palmer Point</a> (no parking, watercraft access only), Siesta Key accesses <a href="/beaches/siesta-access-3/">3</a>, <a href="/beaches/siesta-access-3b/">3B</a>, <a href="/beaches/siesta-access-10/">10</a>, <a href="/beaches/siesta-access-11/">11</a>, and <a href="/beaches/siesta-access-13/">13</a> (no parking, pedestrian only), and <a href="/beaches/turtle-campground/">Turtle Beach Campground</a> (no beach parking). Access 2 is titled as one accessible space and no other parking. This guide does not give Access 2 its own page. Access 11 is the odd title: no parking, and a lifeguard still on the amenity list.</p>
+<p>The <a href="https://sarasotacountyfl.qscend.com/311/knowledgebase/article/1010" rel="nofollow noopener">hours page</a>, which that site dates 25 Feb 2025 and which we opened 21 Nov 2026, says the main <a href="/beaches/siesta-beach/">Siesta Beach</a> lot is free and open year round from 6 a.m. to 10 p.m., with room for a recreational vehicle. It names accesses 3, 3B, 10, 11, and 13 as open 24 hours with no parking. It also says there is no overnight parking in county beach lots, and that lot hours are 6 a.m. to 10 p.m. unless a sign says otherwise. The Siesta destination page, opened the same day, says there are over 950 free spaces. That is the largest count the county prints in this set. The same two county pages disagree on the access mat (504 feet on the directory, 454 feet on the destination page) and on the lifeguard clock (4:45 p.m. on the directory, 5 p.m. on the destination page). The free lot is the part they agree on.</p>
+<p><a href="/beaches/caspersen-beach/">Caspersen</a> is not a free lot. The facility page checked 20 Nov 2026 said the Harbor Drive vehicle lot was closed after the 2024 storm washout, with entry on foot or by bicycle from <a href="/beaches/south-brohard/">South Brohard</a>. We did not reopen that facility page on 21 Nov. The directory listing does not repeat the closure in its title.</p>
+<p>These county pages do not describe meters. The paid pattern in this guide is Pinellas County and the state parks, written out on the <a href="/guides/free-parking/">free parking guide</a>.</p>
+''' + next_reads([
+                ("/guides/free-parking/", "Which beaches have free parking", "Sarasota's free lots, the state park prices, and the islands with no car lot."),
+                ("/beaches/siesta-beach/", "Siesta Beach", "Over 950 free spaces, and the two county pages that disagree on the mat."),
+                ("/beaches/caspersen-beach/", "Caspersen Beach", "Vehicle lot closed on the facility page checked 20 Nov 2026."),
+                ("/beaches/north-lido/", "North Lido", "The directory title says no parking."),
+            ], "Keep reading", "next-mid")
+            tail = compare_box(
+                "Check another lot",
+                '<p><a href="/beaches/siesta-beach/">Siesta Beach</a> is the free lot with a published space count. <a href="/beaches/fort-de-soto/">Fort De Soto</a> in the next county north prints 6 dollars. <a href="/beaches/anclote-key/">Anclote Key</a> has no car lot. <a href="/beaches/caspersen-beach/">Caspersen</a> is the closed lot, not a free one.</p>'
+            ) + next_reads([
+                ("/regions/gulf/", "Gulf Coast beaches", "Sarasota is one county on that coast, not the whole coast."),
+                ("/guides/how-to-pick-a-florida-beach/", "How to pick a Florida beach", "A free lot still fails if the dog rule or the lifeguard window is wrong."),
+                ("/beaches/siesta-access-11/", "Siesta Access 11", "No parking in the title, and a lifeguard still on the amenity list."),
+                ("/guides/best-for-dogs/", "Beaches that allow dogs on the sand", "A free lot and a dog are often different beaches. Siesta's main beach allows service animals only."),
+            ], "More to check", "next-end")
+            faqs = [
+                ("Is Sarasota County beach parking free?", "The directory checked 21 Nov 2026 says parking at select beaches and parks is free and first come, first served. It does not print a dollar amount. Titles that say no parking are exceptions. Siesta Beach states over 950 free spaces."),
+                ("Which Sarasota beaches have no parking?", "The directory titles name North Lido, Palmer Point, Siesta accesses 3, 3B, 10, 11, and 13, and Turtle Beach Campground. Access 2 is limited to one accessible space. Caspersen's vehicle lot was closed on the facility page checked 20 Nov 2026."),
+                ("Do the county pages describe meters?", "No. The directory and the hours page describe free select lots, lot hours, and named accesses with no parking. They do not describe meters."),
+            ]
+        body = '<article class="prose wide"><h1>%s beaches</h1>%s<p class="answer">%s</p>%s<ul class="cards">%s</ul>%s%s%s</article>' % (
+            E(name), byline(verified), E(intro), extra, "".join(card(b) for b in bs), tail, pick_links(bs, region), faq_html(faqs))
         pub, mod = hub_dates(path)
         write(path, page(path, "%s Beaches | %s" % (name, BRAND), clip(intro), body,
                          [article_ld(name + " beaches", path, published=pub, modified=mod), faq_ld(faqs)],
@@ -585,7 +650,9 @@ def pick_links(bs, region):
         bits.append('<a href="/guides/best-for-snorkeling/">Shore snorkeling</a>')
     return "<p>%s</p>" % " · ".join(bits)
 
-def guide(path, title, h1, desc, inner, faqs, sources, verified_h=None, published=None, modified=None):
+PARKING_PHOTO = "assets/images/guides/beach-access-parking-dunes.png"
+
+def guide(path, title, h1, desc, inner, faqs, sources, verified_h=None, published=None, modified=None, image=None, thumb="", crumbs=None):
     more = ['<a href="/">Homepage picker</a>', '<a href="/beaches/">All beaches</a>', '<a href="/regions/">Regions</a>']
     if path != "/guides/how-to-pick-a-florida-beach/":
         more.append('<a href="/guides/how-to-pick-a-florida-beach/">How to pick</a>')
@@ -594,10 +661,110 @@ def guide(path, title, h1, desc, inner, faqs, sources, verified_h=None, publishe
     hub_pub, hub_mod = hub_dates(path)
     pub = published if published is not None else hub_pub
     mod = modified if modified is not None else hub_mod
-    body = '<article class="prose"><h1>%s</h1>%s%s%s<section class="sources"><h2>Sources</h2>%s<p class="note">Retrieved %s.</p></section></article>' % (
-        E(h1), byline(v_h), inner, faq_html(faqs), src_list(sources), v_h)
-    write(path, page(path, title, desc, body, [article_ld(h1, path, published=pub, modified=mod), faq_ld(faqs)],
-                      [("/", "Home"), (path, h1)], og_type="article", lastmod=mod))
+    body = '<article class="prose"><h1>%s</h1>%s%s%s%s<section class="sources"><h2>Sources</h2>%s<p class="note">Retrieved %s.</p></section></article>' % (
+        E(h1), byline(v_h), thumb, inner, faq_html(faqs), src_list(sources), v_h)
+    write(path, page(path, title, desc, body, [article_ld(h1, path, published=pub, modified=mod, image=image), faq_ld(faqs)],
+                      crumbs or [("/", "Home"), (path, h1)], og_type="article", lastmod=mod))
+
+def free_parking():
+    photo = PARKING_PHOTO
+    has = os.path.isfile(os.path.join(ROOT, photo))
+    thumb = news_thumb(photo, "Dune grass and a sandy path between a beach parking area and the shore, in daylight")
+    image = "/" + photo if has else None
+
+    def row(place, fact):
+        return "<tr><td>%s</td><td>%s</td><td>21 Nov 2026</td></tr>" % (place, fact)
+
+    table = (
+        '<div class="tablewrap"><table class="list"><thead><tr>'
+        "<th>Place</th><th>What that page says</th><th>Last verified</th>"
+        "</tr></thead><tbody>%s</tbody></table></div>"
+        % "".join([
+            row('<a href="/beaches/siesta-beach/">Siesta Beach</a>',
+                "The parking section says there are over 950 free spaces, including recreational vehicles, motorcycles, and accessible spaces. The county hours page says the main lot is free."),
+            row('<a href="/counties/sarasota/">Sarasota County beaches</a>',
+                "The directory says parking at select county beaches and parks is free on a first-come, first-served basis. It does not print a dollar amount. Titles that say no parking are not free lots."),
+            row('<a href="/beaches/fort-de-soto/">Fort De Soto</a>',
+                "Pinellas County lists a 6 dollar parking fee. The app and pay by text options add a 0.35 dollar convenience fee."),
+            row('<a href="/beaches/sand-key/">Sand Key</a>',
+                "The park page says hourly and daily rates apply and that annual beach passes exist. It does not print the dollar amount."),
+            row('<a href="/beaches/anastasia/">Anastasia</a>',
+                "The hours page lists 8 dollars per vehicle for up to eight people, 4 dollars for a single occupant vehicle, and 2 dollars for a pedestrian, a bicyclist, or an extra passenger."),
+            row('<a href="/beaches/henderson-beach/">Henderson Beach</a>',
+                "The hours page lists 6 dollars per vehicle for two to eight people, 4 dollars for a single occupant vehicle, and 2 dollars for a pedestrian, a bicyclist, or an extra passenger."),
+            row('<a href="/beaches/big-lagoon/">Big Lagoon</a>',
+                "The hours page lists 6 dollars per vehicle for two to eight people, 4 dollars for a single occupant vehicle, and 2 dollars for a pedestrian, a bicyclist, or an extra passenger. A boat launch is 10 dollars for one person with a boat and 12 dollars for two to eight people with a boat. The experiences page names the lots and does not print the price."),
+            row('<a href="/beaches/big-talbot/">Big Talbot Island</a>',
+                "The parking section says all of those lots are 3 dollars per vehicle. The picnicking section says the wayside picnic area at the south end has no entry fee, so the flat rate does not cover every stop."),
+            row("Florida State Parks fees page",
+                "Daily entrance is charged per vehicle for two to eight people. More than eight means an extra per person fee unless a park says otherwise. County surcharges may apply. Children under six are admitted free. The page does not print one statewide dollar amount."),
+            row('<a href="/beaches/anclote-key/">Anclote Key</a>',
+                "No car lot. The page says you arrive by boat or by ferry from Tarpon Springs or New Port Richey, and it does not print a fare."),
+        ])
+    )
+    guide(
+        "/guides/free-parking/",
+        "Which Florida Beaches Have Free Parking? | %s" % BRAND,
+        "Which Florida beaches have free parking?",
+        "Free parking is a Sarasota County rule for select lots. State parks and Pinellas charge a vehicle fee. Some islands have no car lot.",
+        '''<div class="answer"><p><strong>In this guide, free parking is a Sarasota County sentence.</strong> The state park beaches we opened on 21 Nov 2026 charge a vehicle admission, and the printed amount is not the same park to park. Pinellas prints a county fee or says hourly and daily rates apply. A beach with no car lot is not a free lot.</p></div>
+<p>A row is here only when we opened that agency page on 21 Nov 2026 and it said free, printed a price, or said there is no lot. If a page is silent, we do not call the lot free. None of these pages used the word meter. A flat fee, a pair of hourly and daily rates, and a vehicle admission are three different things, and this page keeps them apart.</p>
+<h2>What the pages say</h2>
+%s
+<p class="note">The date is the day we opened the page, not the day the agency last edited it. The Sarasota hours page says it was updated 25 Feb 2025. We still opened it on 21 Nov 2026.</p>
+<h2>Sarasota is the free column, with named holes</h2>
+<p>The <a href="https://www.sarasotacountyparks.com/parks-and-facilities/discover-a-park/type-of-park/beaches" rel="nofollow noopener">beaches directory</a> says parking is available at select beaches and parks for free on a first-come, first-served basis. <a href="/beaches/siesta-beach/">Siesta Beach</a> is the page that counts the spaces: over 950, and the <a href="https://sarasotacountyfl.qscend.com/311/knowledgebase/article/1010" rel="nofollow noopener">hours page</a> says that main lot is free from 6 a.m. to 10 p.m. year round. The same hours page says there is no overnight parking in county beach lots.</p>
+<p>The directory titles that remove the lot are <a href="/beaches/north-lido/">North Lido</a>, <a href="/beaches/palmer-point/">Palmer Point</a> (watercraft access only), Siesta accesses <a href="/beaches/siesta-access-3/">3</a>, <a href="/beaches/siesta-access-3b/">3B</a>, <a href="/beaches/siesta-access-10/">10</a>, <a href="/beaches/siesta-access-11/">11</a>, and <a href="/beaches/siesta-access-13/">13</a>, and <a href="/beaches/turtle-campground/">Turtle Beach Campground</a>. Access 2 is titled as one accessible space and no other parking. This guide does not give Access 2 its own page. Access 11 is the odd title: no parking, and a lifeguard still on the amenity list. The hours page adds that accesses 3, 3B, 10, 11, and 13 stay open 24 hours and still have no parking.</p>
+<p><a href="/beaches/caspersen-beach/">Caspersen</a> is not in the free column. The facility page checked 20 Nov 2026 said the vehicle lot was closed. We did not reopen that facility page today. A closed lot is not a lot that costs nothing.</p>
+<h2>State parks do not share one price</h2>
+<p>The <a href="https://www.floridastateparks.org/fees" rel="nofollow noopener">statewide fees page</a> says daily entrance is per vehicle for two to eight people, that county surcharges may apply, and that children under six are admitted free. It tells you to open the park page for the number. We did. <a href="/beaches/anastasia/">Anastasia</a> is 8 dollars for a vehicle with up to eight people. <a href="/beaches/henderson-beach/">Henderson Beach</a> and <a href="/beaches/big-lagoon/">Big Lagoon</a> are 6 dollars on that same split, and Big Lagoon adds a separate boat launch price. <a href="/beaches/big-talbot/">Big Talbot</a> is the cheap outlier at 3 dollars, except the wayside picnic area, which the picnicking section says has no entry fee. Copying one of those numbers onto the next state park would be a guess. Most experiences pages in this guide still do not print the day use fee at all. Those parks are not listed above, and they are not free by omission.</p>
+<h2>Pinellas prints a county charge</h2>
+<p><a href="/beaches/fort-de-soto/">Fort De Soto</a> is a flat 6 dollars, payable by app, text, terminal, or an annual pass, with a 0.35 dollar convenience fee on the app and on text. <a href="/beaches/sand-key/">Sand Key</a> says hourly and daily rates apply and does not print either number. We leave the blank. Both pages were opened 21 Nov 2026. Hours on both are 7 a.m. to sunset.</p>
+<h2>No car lot</h2>
+<p><a href="/beaches/anclote-key/">Anclote Key</a> is the clearest case we rechecked. The experiences page says boat or ferry from Tarpon Springs or New Port Richey, and it stops there. No operator, no fare, no island lot. <a href="/counties/pasco/">Pasco County</a> in this guide is that one preserve. Treat a ferry you have not priced as an unknown, not as free parking.</p>
+''' % table + pack_reads(
+            [
+                ("/beaches/siesta-beach/", "Siesta Beach", "Over 950 free spaces, and the only large count the county prints."),
+                ("/beaches/fort-de-soto/", "Fort De Soto", "A 6 dollar county fee, plus 0.35 dollar if you pay in the app."),
+                ("/beaches/anastasia/", "Anastasia State Park", "8 dollars a vehicle. The hours page calls that charge admission."),
+                ("/beaches/anclote-key/", "Anclote Key", "No car lot. A ferry from Tarpon Springs or New Port Richey, with no fare on the page."),
+            ],
+            [
+                ("/guides/how-to-pick-a-florida-beach/", "How to pick a Florida beach", "Start with the constraint that would ruin the day. A closed or paid lot is one of them."),
+                ("/counties/sarasota/", "Sarasota County beaches", "The directory that says select lots are free, and the titles that say no parking."),
+                ("/counties/pasco/", "Pasco County", "One beach in this guide, and it has no car lot."),
+                ("/beaches/big-talbot/", "Big Talbot Island", "3 dollars at the named lots, and a wayside picnic area with no entry fee."),
+            ],
+            '<p>Four different answers. <a href="/beaches/siesta-beach/">Siesta</a> states a free lot. <a href="/beaches/fort-de-soto/">Fort De Soto</a> states 6 dollars. <a href="/beaches/anastasia/">Anastasia</a> states 8 dollars and calls it admission. <a href="/beaches/anclote-key/">Anclote Key</a> has no lot to price. <a href="/beaches/big-talbot/">Big Talbot</a> is the state park that prints 3 dollars and then exempts one picnic area.</p>',
+            "Check another lot",
+        ),
+        [
+            ("Which beaches in this guide have free parking?", "Sarasota County's directory, checked 21 Nov 2026, says parking at select beaches and parks is free and first come, first served. Siesta Beach states over 950 free spaces. A directory title that says no parking is not a free lot."),
+            ("Do Florida State Parks beaches include free parking?", "Not on the pages we opened 21 Nov 2026. The statewide fees page charges a vehicle admission and does not print one dollar amount. Anastasia lists 8 dollars. Henderson Beach and Big Lagoon list 6 dollars. Big Talbot lists 3 dollars, and its wayside picnic area has no entry fee."),
+            ("Is a beach free to park if the page never names a price?", "No. Silence is not a free lot. Sand Key says hourly and daily rates apply and does not print the amount. We do not fill that gap."),
+            ("Are the lots metered?", "The county and state park pages checked for this guide do not describe meters. They describe a free county lot, a flat county fee, hourly and daily rates, or a vehicle admission."),
+        ],
+        [
+            ("Sarasota County: Siesta Beach", "https://www.sarasotacountyparks.com/parks-and-facilities/discover-a-park/destination-parks/siesta-beach"),
+            ("Sarasota County: beaches directory", "https://www.sarasotacountyparks.com/parks-and-facilities/discover-a-park/type-of-park/beaches"),
+            ("Sarasota County: beach and parking hours", "https://sarasotacountyfl.qscend.com/311/knowledgebase/article/1010"),
+            ("Pinellas County: Fort De Soto Park", "https://pinellas.gov/parks/fort-de-soto-park/"),
+            ("Pinellas County: Sand Key Park", "https://pinellas.gov/parks/sand-key-park/"),
+            ("Florida State Parks: Anastasia hours and fees", "https://www.floridastateparks.org/Anastasia/hours-fees"),
+            ("Florida State Parks: Henderson Beach hours and fees", "https://www.floridastateparks.org/parks-and-trails/henderson-beach-state-park/hours-fees"),
+            ("Florida State Parks: Big Lagoon hours and fees", "https://www.floridastateparks.org/parks-and-trails/big-lagoon-state-park/hours-fees"),
+            ("Florida State Parks: Big Lagoon experiences", "https://www.floridastateparks.org/parks-and-trails/big-lagoon-state-park/experiences-amenities"),
+            ("Florida State Parks: Big Talbot Island", "https://www.floridastateparks.org/parks-and-trails/big-talbot-island-state-park/experiences-amenities"),
+            ("Florida State Parks: fees", "https://www.floridastateparks.org/fees"),
+            ("Florida State Parks: Anclote Key", "https://www.floridastateparks.org/parks-and-trails/anclote-key-preserve-state-park/experiences-amenities"),
+        ],
+        verified_h=PARK_H,
+        published=PARK,
+        modified=PARK,
+        image=image,
+        thumb=thumb,
+        crumbs=[("/", "Home"), ("/beaches/", "Beaches"), ("/guides/free-parking/", "Free parking")],
+    )
 
 def guides():
     shell = [b for b in BEACHES if b["shell"] == "yes"]
@@ -621,7 +788,7 @@ def guides():
     guide("/guides/how-to-pick-a-florida-beach/", "How to Pick a Florida Beach | %s" % BRAND, "How to pick a Florida beach",
           "Pick a Florida beach by parking, dogs, lifeguards, access and shelling, then check FWC and the health department the day you go.",
           '''<div class="answer"><p><strong>Short version.</strong> Choose the constraint that would ruin the day, then open that beach's page and the agency link. We do not rank a single winner.</p></div>
-<h2>1. Parking and arrival</h2><p>Read whether the lot is free, metered, or covered by a park entrance fee, and whether the agency says the lot fills. If the page does not give a clock time, we do not invent one. Have a second beach in the same county.</p>
+<h2>1. Parking and arrival</h2><p>Read whether the lot is free, metered, or covered by a park entrance fee, and whether the agency says the lot fills. If the page does not give a clock time, we do not invent one. Have a second beach in the same county. The <a href="/guides/free-parking/">free parking guide</a> names the pages that say free, the pages that print a fee, and the beaches with no car lot.</p>
 <h2>2. Dogs, kids, and step free access</h2><p>Dog rules change at the county line. A beach wheelchair or an access mat is listed only when the park page says so. Lifeguard coverage is listed only when the page says who is on duty, and for which hours.</p>
 <h2>3. Shells</h2><p>Empty shells and live animals are different things. Read the <a href="/guides/best-shelling/">shelling guide</a> and the FWC page before you pocket anything.</p>
 <h2>4. The day you go</h2><p>Red tide and bacteria are not facts we freeze on a page. Use the <a href="/guides/red-tide/">red tide guide</a> and the health department map that morning. Beach warning flags are a different sign. The <a href="/guides/beach-flag-colors/">flag color guide</a> explains the state system and does not post today's color.</p>
@@ -641,7 +808,10 @@ def guides():
           ),
           [("What is the best Florida beach?", "There is no single best beach. The useful question is which published constraint matters: a guarded swim, a dog, a beach wheelchair, shells, or a lot that the agency says fills."),
            ("Do you post today's red tide?", "No. FWC posts the current status and a daily sample map. We link those pages and explain how to read them.")],
-          [FWC_FAQ, FDOH, FWC_SHELLS])
+          [FWC_FAQ, FDOH, FWC_SHELLS],
+          verified_h=PARK_H)
+
+    free_parking()
 
     guide("/guides/red-tide/", "Red Tide: History and Where to Check | %s" % BRAND, "Red tide history and where to check today",
           "Florida red tide background from FWC, plus the live status map, beach conditions reports, and the health department bacteria map.",
@@ -740,7 +910,7 @@ def guides():
               ("Florida State Parks: Anclote Key", "https://www.floridastateparks.org/parks-and-trails/anclote-key-preserve-state-park/experiences-amenities"),
               FWC_FAQ,
           ],
-          verified_h=TODAY_H, published=PUBLISHED, modified=TODAY)
+          verified_h=TODAY_H, published=PUBLISHED, modified=PARK)
 
     snorkel_mid = next_reads([
         ("/beaches/pennekamp-cannon/", "Cannon Beach at John Pennekamp", "Key Largo shore the park calls its primary snorkel beach, with placed shipwreck artifacts."),
@@ -815,10 +985,10 @@ def guides():
     guide("/guides/best-for-accessibility/", "Most Accessible Florida Beaches | %s" % BRAND, "Beaches with a wheelchair or an access mat",
           "Florida beaches where the park page offers a beach wheelchair, a swimming chair, or an access mat. Ask the park about availability.",
           '''<div class="answer"><p><strong>How this list is made.</strong> A beach is here when the managing agency page says it has a beach wheelchair, a swimming chair, or a mat onto the sand. We do not infer access from a paved lot alone.</p></div>
-<p>Chairs are often first come, first served, and some parks ask you to reserve. The page says where to ask. We do not publish a phone number here. Use the link on the beach page. <a href="/beaches/anastasia/">Anastasia</a> names a Mobi-Mat and elevated boardwalks, with free chairs at the beach shop or Anastasia Water Sports. <a href="/beaches/siesta-beach/">Siesta Beach</a> is the page that states a mat length: 504 feet toward the Gulf.</p>
+<p>Chairs are often first come, first served, and some parks ask you to reserve. The page says where to ask. We do not publish a phone number here. Use the link on the beach page. <a href="/beaches/anastasia/">Anastasia</a> names a Mobi-Mat and elevated boardwalks, with free chairs at the beach shop or Anastasia Water Sports. <a href="/beaches/siesta-beach/">Siesta Beach</a> is the page where the county's own pages disagree on the mat. Checked 21 Nov 2026, the beaches directory says 504 feet and the Siesta destination page says 454 feet.</p>
 <h2>Beaches</h2>%s%s''' % (lst(access), pack_reads(
               [
-                  ("/beaches/siesta-beach/", "Siesta Beach", "Free chairs from the main pavilion, and a mat the county measures at 504 feet."),
+                  ("/beaches/siesta-beach/", "Siesta Beach", "Free chairs from the main pavilion. The county pages disagree on the mat length."),
                   ("/beaches/anastasia/", "Anastasia State Park", "A named Mobi-Mat, boardwalks, and free chairs at the beach shop."),
                   ("/beaches/honeymoon-island/", "Honeymoon Island", "Free beach wheelchairs on the state park page, plus a separate pet beach."),
               ],
@@ -828,11 +998,12 @@ def guides():
                   ("/regions/gulf/", "Gulf Coast beaches", "Where Siesta, Honeymoon Island, and Delnor-Wiggins sit."),
                   ("/regions/atlantic/", "Atlantic Coast beaches", "Anastasia is the Atlantic page with a named mat."),
               ],
-              '<p>A paved lot is not a mat. <a href="/beaches/siesta-beach/">Siesta</a> states 504 feet. <a href="/beaches/anastasia/">Anastasia</a> names a Mobi-Mat and does not state a length. <a href="/beaches/honeymoon-island/">Honeymoon Island</a> offers free chairs and a pet beach that is not the main swim.</p>',
+              '<p>A paved lot is not a mat. <a href="/beaches/siesta-beach/">Siesta</a> has two county lengths, 504 feet and 454 feet, checked 21 Nov 2026. <a href="/beaches/anastasia/">Anastasia</a> names a Mobi-Mat and does not state a length. <a href="/beaches/honeymoon-island/">Honeymoon Island</a> offers free chairs and a pet beach that is not the main swim.</p>',
           )),
           [("Is the chair free?", "When the park page says there is no charge, the beach page repeats that. If the page is silent, we do not guess."),
-           ("Does a mat reach the water?", "Only if the park page describes the length or the route. Siesta Beach is one page that states a length.")],
-          access[0]["sources"][:2])
+           ("Does a mat reach the water?", "Only if the park page describes the length or the route. On 21 Nov 2026 the Sarasota beaches directory said Siesta's mat is 504 feet and the Siesta destination page said 454 feet.")],
+          access[0]["sources"][:2],
+          verified_h=PARK_H)
 
     sunset_others = [b for b in gulf if not b.get("sunset")]
     guide("/guides/best-for-sunsets/", "Best Florida Beaches for Sunsets | %s" % BRAND, "Where the sun sets over the water",
@@ -965,6 +1136,7 @@ def home():
 <h2>Regions</h2><ul class="cards">{regions}</ul>
 <h2>Guides</h2><ul class="cols">
 <li><a href="/guides/how-to-pick-a-florida-beach/">How to pick a Florida beach</a></li>
+<li><a href="/guides/free-parking/">Free parking</a></li>
 <li><a href="/guides/red-tide/">Red tide history and where to check</a></li>
 <li><a href="/guides/best-shelling/">Shelling</a></li>
 <li><a href="/guides/best-for-dogs/">Dogs</a></li>
@@ -1008,7 +1180,7 @@ def about_legal():
     simple("/image-policy/", "Image Policy | %s" % BRAND, "How Which FL Beach handles graphics, social images, and AI generated news photos.", "Image policy", f'''
 <p>Last updated {TODAY_H}.</p>
 <h2>Graphics</h2><p>The logo and the social image are original graphics we drew for this site. They are not photographs of a beach, and they are not copies of a park map or logo.</p>
-<h2>Photos</h2><p>We do not copy park photography. When a guide uses a news style thumbnail, the image links here and carries a credit. Current thumbnails are hosted on this site under <code>/assets/images/guides/</code>, including <code>/assets/images/guides/shore-snorkeling-florida.jpg</code> and <code>/assets/images/guides/beach-warning-flag.png</code>.</p>
+<h2>Photos</h2><p>We do not copy park photography. When a guide uses a news style thumbnail, the image links here and carries a credit. Current thumbnails are hosted on this site under <code>/assets/images/guides/</code>, including <code>/assets/images/guides/shore-snorkeling-florida.jpg</code> <code>/assets/images/guides/beach-warning-flag.png</code> and <code>/assets/images/guides/beach-access-parking-dunes.png</code>.</p>
 <h2>AI generated images</h2><p>Guide thumbnails that are AI generated carry a visible credit that says AI generated image, link to this page, do not depict a real identifiable person, and are not presented as documentary photos of a named park. Until a guide has its own news photo, related read cards may use the site social graphic instead.</p>
 <h2>Names</h2><p>We do not display agency logos. Names identify places.</p>
 <p>If you believe a graphic uses your work, see the <a href="/copyright/">copyright policy</a> or <a href="/contact/">contact us</a>.</p>''', "Image policy")
@@ -1100,6 +1272,7 @@ def extras():
              "> Which FL Beach (whichflbeach.com) helps a reader pick a Florida beach. Each beach page covers parking, shelling, red tide links, beach wheelchairs and mats, dogs, lifeguards, restrooms, and who the beach suits. Facts are cited to county or city parks, Florida State Parks, FWC, and the Florida Department of Health. Verified %s. The site does not state current red tide or bacteria conditions." % PUBLISHED_H,
              "", "## Guides",
              "- [How to pick a Florida beach](%s)" % url("/guides/how-to-pick-a-florida-beach/"),
+             "- [Free parking](%s)" % url("/guides/free-parking/"),
              "- [Red tide history and where to check](%s)" % url("/guides/red-tide/"),
              "- [Shelling](%s)" % url("/guides/best-shelling/"),
              "- [Dogs](%s)" % url("/guides/best-for-dogs/"),
