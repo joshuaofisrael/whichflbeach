@@ -213,8 +213,8 @@ def page(path, title, desc, body, jsonld=None, crumbs=None, noindex=False, legal
     tags = analytics_tags()
     legal_line = '<p class="legal-line">© 2026 Joshua Israel Ventures LLC. All rights reserved. Which FL Beach is a trade name of Joshua Israel Ventures LLC, a Florida limited liability company.</p>' if legal else ""
     cookie = ' | <a href="#cookie-settings" id="cookie-settings">Cookie settings</a>' if LAUNCH else ""
-    adsense = ""
-    if LAUNCH:
+    adsense = ""  # AdSense detached 21 Nov 2026 until the account is approved (see seo-central/site-seo-rules.md). Do not re-add.
+    if False:
         adsense = (
             '<meta name="google-adsense-account" content="%s">'
             '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=%s" crossorigin="anonymous"></script>'
@@ -919,7 +919,7 @@ def extras():
     with open(os.path.join(ROOT, INDEXNOW_KEY + ".txt"), "w") as f:
         f.write(INDEXNOW_KEY)
     with open(os.path.join(ROOT, "ads.txt"), "w") as f:
-        f.write("google.com, pub-5681559774142917, DIRECT, f08c47fec0942fa0\n")
+        f.write("")  # AdSense detached 21 Nov 2026 until the account is approved (see seo-central/site-seo-rules.md). Do not re-add.
     bots = ["*", "Googlebot", "Bingbot", "Mediapartners-Google", "OAI-SearchBot", "ChatGPT-User", "GPTBot",
             "PerplexityBot", "Perplexity-User", "ClaudeBot", "Claude-SearchBot", "Claude-User", "Google-Extended",
             "Applebot", "Applebot-Extended", "Bytespider", "DuckAssistBot", "Amazonbot", "CCBot"]
