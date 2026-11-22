@@ -110,6 +110,8 @@ park("caladesi-island", "Caladesi Island State Park", "Caladesi Island", "gulf",
 
 park("anclote-key", "Anclote Key Preserve State Park", "Anclote Key", "gulf", "pasco", "Pasco County", "Tarpon Springs", "gulf",
      dogs="designated", shell="yes", chair="unstated", mat="unstated", guard="no", restroom="yes",
+     snorkel="yes",
+     snorkel_note="The park page says the clear gulf waters are an excellent spot to snorkel and observe sea life. Entry is by boat or ferry; there is no car lot on the island.",
      parking="The page says you reach the islands by boat or by ferry from Tarpon Springs or New Port Richey. It does not describe a car lot on the island.",
      fills="There is no island car lot in the page we checked.",
      dogs_note="The page says pets are not permitted on Anclote Key. Pets are permitted only on North Anclote Bar, on a six foot handheld leash.",
@@ -513,6 +515,8 @@ park("sebastian-inlet", "Sebastian Inlet State Park", "Sebastian Inlet", "atlant
 
 park("fort-pierce-inlet", "Fort Pierce Inlet State Park", "Fort Pierce Inlet", "atlantic", "st-lucie", "St. Lucie County", "Fort Pierce", "atlantic",
      dogs="unstated", shell="yes", chair="yes", mat="unstated", guard="no", restroom="yes",
+     snorkel="yes",
+     snorkel_note="The park page describes a shore accessible saltwater site with a reef about 100 yards from the beach, maximum depth about 16 to 20 feet, and says the abundance of tropical fish makes it a great spot for snorkeling or scuba. A diver down flag is required for scuba. No lifeguards are on duty.",
      parking=FEE + " The page does not give a space count.", fills=NOFILL,
      dogs_note="The experiences page we checked does not state a pet rule for the beach. Do not assume a dog is allowed.",
      shell_note="The page says a stroll can turn up seashells in a variety of shapes and colors.",
@@ -581,9 +585,14 @@ park("bill-baggs", "Bill Baggs Cape Florida State Park", "Bill Baggs Cape Florid
      sources=[fsp("bill-baggs-cape-florida-state-park", "Bill Baggs Cape Florida")], nearby=["crandon-park", "curry-hammock"])
 
 # Keys
-def bahia(slug, name, short, angle, who, nearby, extra):
+BAHIA_SNORKEL = ("The Bahia Honda park page says the park has some of the best nearshore snorkeling in the Florida Keys, "
+                 "with sea life a few hundred feet from shore in about 4 to 6 feet of water, and that it is good for beginners. "
+                 "A diver down flag is required for scuba. No lifeguards are provided.")
+
+def bahia(slug, name, short, angle, who, nearby, extra, snorkel_note):
     park(slug, name, short, "keys", "monroe", "Monroe County", "Bahia Honda Key", "both",
          dogs="no", shell="unstated", chair="yes", mat="unstated", guard="no", restroom="yes",
+         snorkel="yes", snorkel_note=snorkel_note,
          parking="Day use parking is inside the state park. " + FEE + " The page does not give a space count for this beach alone.",
          fills=NOFILL,
          dogs_note="The page says pets are not allowed on beaches or in the water.",
@@ -597,22 +606,27 @@ bahia("bahia-honda-loggerhead", "Loggerhead Beach at Bahia Honda", "Loggerhead B
       "Loggerhead Beach is the Bahia Honda shore the park page says faces the Atlantic, with shallow water.",
       "It suits an Atlantic swim in shallow water inside a state park that does not staff lifeguards. The wheelchair is shared with the other two beaches.",
       ["bahia-honda-sandspur", "bahia-honda-calusa"],
-      ["The park page says the water is shallow and currents are mild, and that the channel is the place to avoid because currents there are swift."])
+      ["The park page says the water is shallow and currents are mild, and that the channel is the place to avoid because currents there are swift."],
+      BAHIA_SNORKEL + " Loggerhead is the Atlantic facing day use shore in that park.")
 
 bahia("bahia-honda-calusa", "Calusa Beach at Bahia Honda", "Calusa Beach",
       "Calusa Beach is the Bahia Honda shore the park page says faces Florida Bay, with two covered picnic pavilions.",
       "It suits a bay side picnic and a swim, not an Atlantic surf day. Loggerhead and Sandspur are the Atlantic beaches in the same park.",
       ["bahia-honda-loggerhead", "bahia-honda-sandspur"],
-      ["The Calusa area also has grills. One pavilion and one grill are described as accessible."])
+      ["The Calusa area also has grills. One pavilion and one grill are described as accessible."],
+      BAHIA_SNORKEL + " Calusa is the Florida Bay facing shore with the picnic pavilions in that park.")
 
 bahia("bahia-honda-sandspur", "Sandspur Beach at Bahia Honda", "Sandspur Beach",
       "Sandspur Beach is the Bahia Honda shore with parking along the beach, facing the Atlantic, and a centralized restroom.",
       "It suits an Atlantic swim where you want the car closer to the sand than a long walk. The same no lifeguard rule covers the park.",
       ["bahia-honda-loggerhead", "bahia-honda-calusa"],
-      ["Campground sites with a similar name are a separate area. This page is about the day use beach the park describes."])
+      ["Campground sites with a similar name are a separate area. This page is about the day use beach the park describes."],
+      BAHIA_SNORKEL + " Sandspur is the Atlantic day use shore with parking along the beach.")
 
 park("fort-zachary-taylor", "Fort Zachary Taylor Historic State Park", "Fort Zachary Taylor", "keys", "monroe", "Monroe County", "Key West", "atlantic",
      dogs="unstated", shell="yes", chair="yes", mat="unstated", guard="no", restroom="yes",
+     snorkel="yes",
+     snorkel_note="The park page says Fort Zachary Taylor provides some of the best snorkeling from the beach in the Florida Keys and calls it good for beginners. The beach section describes sand and pebbles plus nearby breakwaters with tropical fish. Water shoes are recommended. Gear can be rented at the concession. No lifeguards are on duty.",
      parking=FEE + " The page does not give a space count. It does describe a bike entrance.", fills=NOFILL,
      dogs_note="The experiences page we checked does not state a pet rule. Do not assume a dog is allowed on the beach.",
      shell_note="The page describes a beach of sand and pebbles for beachcombers and snorkelers. It does not promise a particular shell.",
@@ -624,9 +638,10 @@ park("fort-zachary-taylor", "Fort Zachary Taylor Historic State Park", "Fort Zac
      sources=[fsp("fort-zachary-taylor-historic-state-park", "Fort Zachary Taylor")],
      nearby=["bahia-honda-loggerhead", "pennekamp-cannon"])
 
-def pennekamp(slug, name, short, angle, who, nearby):
+def pennekamp(slug, name, short, angle, who, nearby, snorkel="no", snorkel_note=""):
     park(slug, name, short, "keys", "monroe", "Monroe County", "Key Largo", "atlantic",
          dogs="unstated", shell="unstated", chair="yes", mat="unstated", guard="no", restroom="yes",
+         snorkel=snorkel, snorkel_note=snorkel_note,
          parking="The page says there are 351 parking spaces and that on weekends and holidays the lot tends to fill in the early afternoon, after which the park closes until a space opens. Boat trailer parking is limited to 40 spaces and can fill before noon. Parking is included with admission. The boat ramp fee on the page is 10 dollars for the day.",
          fills="Early afternoon on weekends and holidays for cars. Trailer spaces can fill before noon.",
          dogs_note="The experiences page says pets are permitted under the pet policy and does not spell out the beach in the section we used. Many state park pages ban pets on beaches. Confirm at the ranger station before you bring a dog.",
@@ -639,7 +654,9 @@ def pennekamp(slug, name, short, angle, who, nearby):
 pennekamp("pennekamp-cannon", "Cannon Beach at John Pennekamp", "Cannon Beach",
           "Cannon Beach is the Pennekamp shore the page calls the main snorkel beach, with shipwreck artifacts placed in shallow water.",
           "It suits a first snorkel from shore in Key Largo. The page says swimming outside the marked area needs a diver down flag.",
-          ["pennekamp-far", "curry-hammock"])
+          ["pennekamp-far", "curry-hammock"],
+          snorkel="yes",
+          snorkel_note="The park page calls Cannon Beach the primary snorkeling beach, with artifacts from a 1715 Spanish shipwreck placed underwater about 100 feet offshore. Swimming or snorkeling outside the designated area needs a diver down flag. No lifeguards are on duty. Offshore coral reef visits are boat tours, not this beach.")
 pennekamp("pennekamp-far", "Far Beach at John Pennekamp", "Far Beach",
           "Far Beach is the other Pennekamp beach, which the page describes as a place to swim or sit under the palms rather than as the artifact snorkel spot.",
           "It suits a quieter swim in the same park. Cannon Beach is the one with the placed shipwreck pieces.",
@@ -647,6 +664,8 @@ pennekamp("pennekamp-far", "Far Beach at John Pennekamp", "Far Beach",
 
 park("curry-hammock", "Curry Hammock State Park", "Curry Hammock", "keys", "monroe", "Monroe County", "Marathon", "atlantic",
      dogs="no", shell="yes", chair="unstated", mat="unstated", guard="no", restroom="yes", sunset=False,
+     snorkel="yes",
+     snorkel_note="The park page says to snorkel the shallow seagrass flat, where marine life is abundant, and calls it a place to learn before heading to the coral reef. A diver down flag is required anywhere while snorkeling. No lifeguards are provided.",
      parking="The page says parking is limited, there is no overflow lot, and the park closes when the spaces are full. " + FEE,
      fills="When the spaces are full the park closes. No clock time is published.",
      dogs_note="The page says pets are not allowed on the beach or in the water.",

@@ -53,6 +53,8 @@ def add(**k):
     k.setdefault("kids", False)
     k.setdefault("free_access", False)
     k.setdefault("faqs", None)
+    k.setdefault("snorkel", "no")
+    k.setdefault("snorkel_note", "")
     BEACHES.append(k)
 
 def srq(slug, name, short, place, rest, guard, dogs, dogs_note, parking, fills, angle, who, nearby, kids=False, extra=None, sources=None, shell_note=NOSHELL, shell="unstated"):
