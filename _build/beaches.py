@@ -75,14 +75,32 @@ add(slug="siesta-beach", name="Siesta Beach", short="Siesta Beach", region="gulf
     dogs_note="The Siesta Beach page says only service animals are allowed on Siesta Beach.",
     shell_note="The Siesta Beach page describes nearly 100 percent quartz crystal sand and says it does not get hot. It does not describe shelling.",
     chair_note="The Siesta Beach page says beach wheelchairs are free, year round, from the parking areas to the shore, and that they are signed out at the main pavilion concession. Users complete a liability form. The page tells you to ask about availability. We do not print the phone number here.",
-    mat_note="The Sarasota County beaches page says an access mat at Siesta Beach extends 504 feet toward the Gulf.",
-    guard_note="The Sarasota County beaches page says lifeguards are on duty 10 a.m. to 4:45 p.m., seven days a week, at six named beaches including Siesta Beach.",
+    mat_note="Checked 21 Nov 2026. The beaches directory says the access mat extends 504 feet toward the Gulf. The Siesta Beach destination page says 454 feet. Both are county pages. This guide does not choose between them.",
+    guard_note="Checked 21 Nov 2026. The beaches directory says lifeguards are on duty 10 a.m. to 4:45 p.m., seven days a week, at six named beaches including Siesta Beach. The Siesta Beach destination page says 10 a.m. to 5 p.m., seven days a week.",
     rest_note="The Siesta Beach page says there are plenty of restrooms and no dedicated changing rooms.",
-    angle="Siesta Beach is the Sarasota County park with the large free lot, a published lifeguard window, a free beach wheelchair and a 504 foot access mat.",
+    angle="Siesta Beach is the Sarasota County park with the large free lot, a published lifeguard window, a free beach wheelchair, and an access mat.",
     who="It suits a group that wants a staffed Gulf swim, a playground, food, and step free help, and that can use the free trolley if the lot is busy. It does not suit someone bringing a pet dog.",
     sources=[SIESTA, SRQ, SRQH], nearby=["turtle-beach", "siesta-access-12", "siesta-access-1"],
-    published="2026-11-19",
-    extra=["The county also lists a shaded playground, concessions, sand volleyball, pickleball and tennis. Alcohol is allowed for people of legal drinking age. Glass is prohibited. The page links out for red tide instead of describing current conditions."])
+    published="2026-11-19", modified="2026-11-21", verified="2026-11-21",
+    extra=["The county also lists a shaded playground, concessions, sand volleyball, pickleball and tennis. Alcohol is allowed for people of legal drinking age. Glass is prohibited. The page links out for red tide instead of describing current conditions."],
+    extra_html=[
+        '<p>Rechecked 21 Nov 2026. The destination page and the <a href="https://www.sarasotacountyparks.com/parks-and-facilities/discover-a-park/type-of-park/beaches" rel="nofollow noopener">beaches directory</a> still disagree on two numbers. The directory says the access mat is 504 feet and that lifeguards work until 4:45 p.m. The destination page says 454 feet and 5 p.m. Both are county pages. Use the sign at the beach for the day you go. The free lot is the part they agree on: the destination page says over 950 free spaces, and the <a href="https://sarasotacountyfl.qscend.com/311/knowledgebase/article/1010" rel="nofollow noopener">hours page</a> says that main lot is free. The full split between free lots, paid lots, and beaches with no car lot is on the <a href="/guides/free-parking/">free parking guide</a>.</p>',
+    ],
+    reads={
+        "mid": [
+            ("/guides/free-parking/", "Which beaches have free parking", "Siesta is the free lot with a space count. Fort De Soto and Anastasia are not."),
+            ("/counties/sarasota/", "Sarasota County beaches", "The directory sentence that says select lots are free, and the titles that say no parking."),
+            ("/beaches/fort-de-soto/", "Fort De Soto", "The Pinellas park that prints a 6 dollar parking fee."),
+        ],
+        "end": [
+            ("/beaches/anastasia/", "Anastasia State Park", "8 dollars a vehicle on the hours page checked 21 Nov 2026."),
+            ("/beaches/caspersen-beach/", "Caspersen Beach", "Not a free lot. The vehicle lot was closed on the page checked 20 Nov 2026."),
+            ("/guides/how-to-pick-a-florida-beach/", "How to pick a Florida beach", "A free lot still fails if you need a dog on the sand."),
+            ("/beaches/turtle-beach/", "Turtle Beach", "The south end of Siesta Key, with a lot the directory does not call no parking."),
+        ],
+        "compare": '<p><a href="/beaches/siesta-beach/">Siesta</a> states a free lot. <a href="/beaches/fort-de-soto/">Fort De Soto</a> states 6 dollars. <a href="/beaches/anastasia/">Anastasia</a> states 8 dollars as admission. <a href="/beaches/anclote-key/">Anclote Key</a> has no car lot.</p>',
+        "compare_title": "Check another lot",
+    })
 
 srq("turtle-beach", "Turtle Beach", "Turtle Beach", "Siesta Key", "yes", "unstated", "unstated", SRQ_DOG_QUIET, SRQ_PARK, NOFILL,
     "Turtle Beach is the staffed county park at the south end of Siesta Key, with a boat ramp, a fishing pier and a playground, and no lifeguard in the directory list.",
